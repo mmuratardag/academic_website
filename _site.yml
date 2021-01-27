@@ -1,0 +1,27 @@
+name: "M. Murat Ardag"
+output_dir: "."
+navbar:
+  title: "M. Murat Ardag, Ph.D."
+  left:
+    - text: "Home"
+      href: index.html
+    - text: "Professional Experience"
+      href: professional-experience.html
+    - text: "Education"
+      href: education.html
+    - text: "Publications"
+      href: publications.html
+    - text: "Teaching"
+      href: teaching.html
+    - text: "About"
+      href: about.html
+    - text: "Blog"
+      href: blog.html
+      
+  right:
+    - icon: fa-at fa-lg
+      href: contact.html
+output:
+  html_document:
+    theme: spacelab
+    highlight: zenburn
