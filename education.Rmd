@@ -1,0 +1,25 @@
+---
+pagetitle: "MMA, Ph.D., Education"
+---
+<br>
+<img src="ws_img/diploma.png" style="width:15%; margin-right: 0px" align="left">
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+* __CvO Universität Oldenburg__
+    * [Institute of Social Sciences](https://uol.de/en/socialsciences){target="_blank"}
+      * Ph.D. in Political Science <font size="1">[2015-2018]</font>
+* __I.D. Bilkent University__
+    * [Department of Political Science & Public Administration](http://pols.bilkent.edu.tr){target="_blank"}
+      * M.A. without Thesis Equivalent; Post-Graduate Studies in Political Science <font size="1">[2008-2012]</font>
+* __Galatasaray University__
+    * [Department of International Relations](http://ui.gsu.edu.tr){target="_blank"}
+      * M.A. Regional & Strategic Studies <font size="1">[2005-2008]</font>
+* __Istanbul Bilgi University__
+    * [Department of International Relations](https://www.bilgi.edu.tr/en/academic/faculty-of-social-sciences-and-humanities/international-relations){target="_blank"}
+      * B.A. International Relations <font size="1">[1999-2004]</font>

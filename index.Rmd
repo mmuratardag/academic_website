@@ -1,0 +1,26 @@
+---
+pagetitle: "M. Murat Ardag, Ph.D."
+---
+<br />
+
+<img src="ws_img/mma_c_gp.jpg" style="width:15%; margin-right: 20px" align="left">
+
+I am a political psychologist dabbling in data science -- visit [here](about.html) for more details.
+
+<br />
+<br />
+<br />
+<br />
+<br />
+
+__What's new?__
+<br/> ***02/07/2020***: Article with [Ponizovskiy](https://www.bigsss-bremen.de/people/phd-fellows/vladimir-ponizovskiy){target="_blank"}, [Grigoryan](http://www.soc.psy.rub.de/team/grigoryan.html.en){target="_blank"}, [Boyd](https://www.ryanboyd.io/){target="_blank"}, [Dobewall](https://www.oulu.fi/university/researcher/henrik-dobewall){target="_blank"} & [Holtz](https://www.iwm-tuebingen.de/www/en/personen/ma.html?uid=pholtz){target="_blank"} is published in the [*European Journal of Personality*](https://onlinelibrary.wiley.com/journal/10990984){target="_blank"}; supplementary information, and replication material are [here](https://osf.io/vt8nf/){target="_blank"}. Open access view is [here](https://doi.org/10.1002/per.2294){target="_blank"}.
+<br/> ***25/06/2020***: Manuscript with [Thomeczek](https://jpthomeczek.de){target="_blank"} is accepted to [*Journal of Theoretical Social Psychology*](https://onlinelibrary.wiley.com/journal/24750387){target="_blank"}'s special issue: Unpacking the social psychology of populism. Accepted manuscript, supplementary information, and replication material are [here](https://osf.io/v95ut/){target="_blank"}. Early view will be available [here](https://doi.org/10.1002/jts5.70){target="_blank"} in fall 2020.
+<br/> ***29/04/2020***: Press-release of OCPD -- English version is [here](https://www.jacobs-university.de/news/measuring-organizational-culture-through-text-analysis-step-towards-future){target="_blank"}; German version is [here](https://www.jacobs-university.de/news/neue-methode-zur-erfassung-der-unternehmenskultur-ein-schritt-die-zukunft){target="_blank"}
+<br/> ***26/04/2020***: Blog post -- [An informal benchmarking within psychometrics: attitude network approach vs. the general SEM framework using German national identity as an example](blog_2020_04_26.html)
+<br/> ***12/02/2020***: At the end of 2019, together with [Henrik Dobewall](https://www.oulu.fi/university/researcher/henrik-dobewall){target="_blank"}, [Peter Holtz](https://www.iwm-tuebingen.de/www/en/personen/ma.html?uid=pholtz){target="_blank"}, [Klaus Boehnke](https://www.jacobs-university.de/directory/kboehnke){target="_blank"} & [Michael Schachner](https://fi.linkedin.com/in/michaelschachner){target="_blank"}, we received funding from [Business Finland](https://www.businessfinland.fi/en/){target="_blank"} on behalf of [Hofstede Insights](https://www.hofstede-insights.com/){target="_blank"} to develop an instrument that measures organizational culture with text data.
+<br/> ***02/12/2019***: Blog post on the ultra-short version of Collective Narcissism Scale for the [Prejudice Lab at Goldsmiths, University of London](https://collectivenarcissism.com/){target="_blank"}. Pdf version [here](https://collectivenarcissism.com/blog/3item_cns){target="_blank"}; HTML version [here](PODETR_IRT_data.RData.html).
+<br/> ***15/10/2019***: Article published with [Castanho Silva](https://bcastanho.github.io/){target="_blank"}, [Thomeczek](https://jpthomeczek.de){target="_blank"}, [Bandlow-Raffalski](https://www.bigsss-bremen.de/people/inhouse-faculty/dr-steffen-bandlow-raffalski){target="_blank"}, [Littvay](http://levente.littvay.hu/){target="_blank"}. Online first version [here](https://www.tandfonline.com/doi/full/10.1080/00344893.2019.1661870){target="_blank"}, replication material [here](https://osf.io/g8d53/){target="_blank"} and [here](Ardagetal2019RepresentationRepMat.html).
+<br/> ***09/06/2019***: Blog post -- [Juxtaposing psychometrics, topic modeling, and social network analysis to model competing nationalist discourses](blog_2019_06_09.html)
+<br/> ***16/04/2019***: Blog post -- [semtree vs. networktree](blog_2019_04_16.html)
+<br/> ***02/04/2019***: Website moved to GitHub

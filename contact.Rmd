@@ -1,0 +1,97 @@
+---
+pagetitle: "MMA, Ph.D., Contact"
+---
+
+<style type="text/css">
+span.ltrText {unicode-bidi: bidi-override; direction: rtl}
+</style>
+
+<br />
+<br />
+<br />
+
+```{r setup, include=F}
+knitr::opts_chunk$set(echo = F)
+```
+
+<br />
+
+```{r}
+icon::fa(name = "envelope",
+         size = 2, fixed_width = F,
+  animate = "still", rotate = 0, flip = "none", border = F,
+  pull = "left", other = NULL)
+```
+
+<span class="ltrText">ten.gadratarumm
+```{r}
+icon::fa(name = "at",
+         size = 1, fixed_width = F,
+  animate = "still", rotate = 0, flip = "none", border = F,
+  pull = "NULL", other = NULL)
+```
+amm</span>
+
+<br />
+
+[
+```{r}
+icon::ai(name = "google-scholar",
+         size = 3, fixed_width = F,
+  animate = "still", rotate = 0, flip = "none", border = F,
+  pull = "left", other = NULL)
+```
+](https://scholar.google.com/citations?user=6MoKqzkAAAAJ&hl=en){target="_blank"}
+
+[
+```{r}
+icon::ai(name = "orcid",
+         size = 3, fixed_width = F,
+  animate = "still", rotate = 0, flip = "none", border = F,
+  pull = "left", other = NULL)
+```
+](https://orcid.org/0000-0001-9111-1088){target="_blank"}
+
+[
+```{r}
+icon::ai(name = "osf",
+         size = 3, fixed_width = F,
+  animate = "still", rotate = 0, flip = "none", border = F,
+  pull = "left", other = NULL)
+```
+](https://osf.io/4dvtj/){target="_blank"}
+
+[
+```{r}
+icon::ai(name = "researchgate",
+         size = 3, fixed_width = F,
+  animate = "still", rotate = 0, flip = "none", border = F,
+  pull = "left", other = NULL)
+```
+](https://www.researchgate.net/profile/M_Ardag){target="_blank"}
+
+[
+```{r}
+icon::ai(name = "publons",
+         size = 3, fixed_width = F,
+  animate = "still", rotate = 0, flip = "none", border = F,
+  pull = "left", other = NULL)
+```
+](https://publons.com/researcher/3378804/m-murat-ardag/){target="_blank"}
+
+[
+```{r}
+icon::ai(name = "publons",
+         size = 3, fixed_width = F,
+  animate = "still", rotate = 0, flip = "none", border = F,
+  pull = "left", other = NULL)
+```
+](https://publons.com/researcher/3623074/m-murat-ardag/){target="_blank"}
+
+<br>
+<br>
+<br>
+
+GDPR & LEGAL DISCLAIMER
+<br>
+The new General Data Protection Regulation (GDPR), May 25 2018, requires a data transparency statement. This site is made with R Markdown and hosted on GitHub. I do not set any cookies, I do not track any visitors, I do not collect any type of data. Read [this](https://docs.github.com/en/github/site-policy/github-terms-of-service){target="_blank"} to have an idea about what GitHub's ToS are. 

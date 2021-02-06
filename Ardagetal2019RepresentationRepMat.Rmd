@@ -1,0 +1,477 @@
+---
+title: "Ardag et al. 2019 Representation Replication Material"
+author: "M. Murat Ardag"
+date: "9/7/2019"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Visit [team populism](https://populism.byu.edu/){target="_blank"} for various other publications, data, resources and more.
+
+Data & R markdown file also available at [https://osf.io/g8d53](https://osf.io/g8d53){target="_blank"} 
+
+# load the necessary packages
+
+```{r}
+packages <- c("lavaan" , "semPlot", "semTools", "psych", "tidyverse", "reshape2", "knitr")
+
+for(i in packages){
+  if(!require(i, character.only = T)) install.packages(i, dependencies=T)
+  library(i, character.only = T)
+}
+options(knitr.kable.NA = '')
+```
+
+# load the datasets
+
+```{r}
+load("dataUS.RData")
+load("dataDE1.RData")
+load("dataDE2.RData")
+```
+
+# Study 1
+
+popexp1 = EXPTRT
+
+convert the experimental treatment into factor
+
+```{r}
+US$EXPTRT <- factor(US$EXPTRT, levels = c(0,1), labels = c("Control","Treatment"))
+```
+
+## (+) political engagement strategy: active support in elections
+
+```{r}
+US_model_PE <- '
+pop =~ ant1 + ant2 + ant3 + ant5 + pop2 + pop3 + pop4 # populist attitudes
+ase =~ anes617 + anes616 + anes615 # active support in elections
+ase ~ pop # regression
+'
+US_PE_r_fit <- sem (US_model_PE, US, estimator="mlr", mimic="mplus", missing="fiml",
+                    group = "EXPTRT", sample.mean = T,
+                    group.equal=c("loadings", "intercepts",
+                                  "residuals", "residual.covariances", "lv.variances", "lv.covariances",
+                                  "regressions"),
+                    group.partial=c("means")) # restricted model
+
+US_PE_f_fit <- sem (US_model_PE, US, estimator="mlr", mimic="mplus", missing="fiml",
+                    group = "EXPTRT", sample.mean = T,
+                    group.equal=c("loadings", "intercepts", 
+                                  "residuals", "residual.covariances", "lv.variances", "lv.covariances"),
+                    group.partial=c("regressions", "means")) # free model
+```
+
+## model comparison & summary
+
+```{r}
+anova(US_PE_r_fit, US_PE_f_fit)
+cf <- compareFit(US_PE_r_fit, US_PE_f_fit, nested=T)
+summary(cf)
+```
+
+## SEM estimates summary
+
+```{r}
+summary(US_PE_r_fit, fit.measures=T, standardized=T, rsquare=T)
+summary(US_PE_f_fit, fit.measures=T, standardized=T, rsquare=T)
+```
+
+## plot the path models
+
+```{r, fig.width=15, fig.height=8}
+par(mfrow=c(2,2))
+semPaths(US_PE_r_fit, "mod", "std", intercept=F, rotation = 2, edge.label.cex=.9, sizeMan = 5, sizeLat = 6, optimizeLatRes=T, ask=F)
+semPaths(US_PE_f_fit, "mod", "std", intercept=F, rotation = 2, edge.label.cex=.9, sizeMan = 5, sizeLat = 6, optimizeLatRes=T, ask=F)
+dev.off()
+```
+
+## (-) political engagement strategy: legitimate radical political action
+
+```{r}
+US_model_NE <- '
+pop =~ ant1 + ant2 + ant3 + ant5 + pop2 + pop3 + pop4 # populist attitudes
+rpa =~ radact1 + radact2 + radact3 + radact5 + radact6 # legitimate radical political action
+rpa ~ pop # regression
+'
+US_NE_r_fit <- sem (US_model_NE, US, estimator="mlr", mimic="mplus", missing="fiml",
+                    group = "EXPTRT", sample.mean = T,
+                    group.equal=c("loadings", "intercepts",
+                                  "residuals", "residual.covariances", "lv.variances", "lv.covariances",
+                                  "regressions"),
+                    group.partial=c("means"))
+
+US_NE_f_fit <- sem (US_model_NE, US, estimator="mlr", mimic="mplus", missing="fiml",
+                    group = "EXPTRT", sample.mean = T,
+                    group.equal=c("loadings", "intercepts", 
+                                  "residuals", "residual.covariances", "lv.variances", "lv.covariances"),
+                    group.partial=c("regressions", "means"))
+```
+
+## model comparison & summary
+
+```{r}
+anova(US_NE_r_fit, US_NE_f_fit)
+cf <- compareFit(US_NE_r_fit, US_NE_f_fit, nested=T)
+summary(cf)
+```
+
+## SEM estimates summary
+
+```{r}
+summary(US_NE_r_fit, fit.measures=T, standardized=T, rsquare=T)
+summary(US_NE_f_fit, fit.measures=T, standardized=T, rsquare=T)
+```
+
+## plot the path models
+
+```{r, fig.width=15, fig.height=8}
+par(mfrow=c(2,2))
+semPaths(US_NE_r_fit, "mod", "std", intercept=F, rotation = 2, edge.label.cex=.9, sizeMan = 5, sizeLat = 6, optimizeLatRes=T, ask=F)
+semPaths(US_NE_f_fit, "mod", "std", intercept=F, rotation = 2, edge.label.cex=.9, sizeMan = 5, sizeLat = 6, optimizeLatRes=T, ask=F)
+dev.off()
+```
+
+# Study 2 DE sample 1
+
+convert the experimental treatment into factor
+
+```{r}
+DE1$EXPTRT <- factor(DE1$EXPTRT, levels = c(0,3), labels = c("Control","Treatment"))
+```
+
+## measurement model
+## get the single populism score from multiple dimensions
+
+as explained in [Castanho Silva, Bruno, Ioannis Andreadis, Eva Anduiza, Nebojsa Blanusa, Yazmin Morlet Corti, Gisela Delfino, Guillem Rico, Saskia P. Ruth, Bram Spruyt, Marco Steenbergen, and Levente Littvay. 2018. "Public Opinion Surveys: a New Scale". In: The Ideational Approach to Populism: Theory, Method & Analysis, edited by Kirk A. Hawkins, Ryan Carlin, Levente Littvay, and Cristóbal Rovira Kaltwasser. London: Routledge. 150-177](https://www.routledge.com/The-Ideational-Approach-to-Populism-Concept-Theory-and-Analysis-1st/Hawkins-Carlin-Littvay-Kaltwasser/p/book/9781138716537){target="_blank"}
+
+see also [Castanho Silva, Bruno, Sebastian Jungkunz, Marc Helbling, and Levente Littvay. 2019. "An Empirical Comparison of Seven Populist Attitudes Scales". Political Research Quarterly.](https://journals.sagepub.com/doi/10.1177/1065912919833176){target="_blank"}
+
+```{r}
+DE_S1_measure.model <-'
+pc =~ POPpc3 + POPpc1
+ae =~ POPae3 + POPae1
+mw =~ POPmwv3 + POPmwv1
+'
+measure.cfa.fit <-cfa(DE_S1_measure.model, DE1, estimator='mlr', mimic='mplus',missing='fiml', sample.mean=T)
+range01 <- function(x){(x-min(x,na.rm=T))/(max(x,na.rm=T)-min(x,na.rm=T))}
+dimensions<-predict(measure.cfa.fit)[,1:3]
+dimensions<-apply(dimensions,2,range01)
+pop_DE1<-dimensions[,1]*dimensions[,2]*dimensions[,3]
+DE1$pop<-pop_DE1
+```
+
+## (+) political engagement strategy: being an active citizen
+
+```{r}
+DE1_model_PE <-'
+gc =~ alwVote + KWAoGov + ActSocPol
+gc ~ pop # regression
+'
+
+DE1_PE_r_fit <- sem (DE1_model_PE,DE1, estimator="mlr", mimic="mplus", missing="fiml",
+                     group = "EXPTRT", sample.mean = T,
+                     group.equal=c("loadings", "intercepts",
+                                   "residuals", "residual.covariances", "lv.variances", "lv.covariances",
+                                   "regressions"),
+                     group.partial=c("means"))
+
+DE1_PE_f_fit <- sem (DE1_model_PE,DE1, estimator="mlr", mimic="mplus", missing="fiml",
+                     group = "EXPTRT", sample.mean = T,
+                     group.equal=c("loadings", "intercepts", 
+                                   "residuals", "residual.covariances", "lv.variances", "lv.covariances"),
+                     group.partial=c("regressions", "means"))
+```
+
+
+## model comparison & summary
+
+```{r}
+anova(DE1_PE_r_fit, DE1_PE_f_fit)
+cf <- compareFit(DE1_PE_r_fit, DE1_PE_f_fit, nested=T)
+summary(cf)
+```
+
+## SEM estimates summary
+
+```{r}
+summary(DE1_PE_r_fit, fit.measures=T, standardized=T, rsquare=T)
+summary(DE1_PE_f_fit, fit.measures=T, standardized=T, rsquare=T)
+```
+
+## plot the path models
+
+```{r, fig.width=15, fig.height=8}
+par(mfrow=c(2,2))
+semPaths(DE1_PE_r_fit, "mod", "std", intercept=F, rotation = 2, edge.label.cex=.9, sizeMan = 5, sizeLat = 6, optimizeLatRes=T, ask=F)
+semPaths(DE1_PE_f_fit, "mod", "std", intercept=F, rotation = 2, edge.label.cex=.9, sizeMan = 5, sizeLat = 6, optimizeLatRes=T, ask=F)
+dev.off()
+```
+
+## (-) political engagement strategy: abstaining from voting
+
+```{r}
+DE1_model_NE <-'
+vot =~ a*vp1 + a*vp3 # not voting
+vot ~ pop # regression
+'
+DE1_NE_r_fit <- sem (DE1_model_NE, DE1, estimator="mlr", mimic="mplus", missing="fiml",
+                     group = "EXPTRT", sample.mean = T,
+                     group.equal=c("loadings", "intercepts",
+                                   "residuals", "residual.covariances", "lv.variances", "lv.covariances",
+                                   "regressions"),
+                     group.partial=c("means"))
+
+DE1_NE_f_fit <- sem (DE1_model_NE, DE1, estimator="mlr", mimic="mplus", missing="fiml",
+                     group = "EXPTRT", sample.mean = T,
+                     group.equal=c("loadings", "intercepts", 
+                                   "residuals", "residual.covariances", "lv.variances", "lv.covariances"),
+                     group.partial=c("regressions", "means"))
+```
+
+## model comparison & summary
+
+```{r}
+anova(DE1_NE_r_fit, DE1_NE_f_fit)
+cf <- compareFit(DE1_NE_r_fit, DE1_NE_f_fit, nested=T)
+summary(cf)
+```
+
+## SEM estimates summary
+
+```{r}
+summary(DE1_NE_r_fit, fit.measures=T, standardized=T, rsquare=T)
+summary(DE1_NE_f_fit, fit.measures=T, standardized=T, rsquare=T)
+```
+
+## plot the path models
+
+```{r, fig.width=15, fig.height=8}
+par(mfrow=c(2,2))
+semPaths(DE1_NE_r_fit, "mod", "std", intercept=F, rotation = 2, edge.label.cex=.9, sizeMan = 5, sizeLat = 6, optimizeLatRes=T, ask=F)
+semPaths(DE1_NE_f_fit, "mod", "std", intercept=F, rotation = 2, edge.label.cex=.9, sizeMan = 5, sizeLat = 6, optimizeLatRes=T, ask=F)
+dev.off()
+```
+
+# Study 3 DE sample 2
+
+convert into factor
+
+```{r}
+DE2$EXPTRT <- factor(DE2$EXPTRT, levels = c(0,1,2), labels = c("Control","PEGIDA","LEIPZIG"))
+```
+
+## measurement model
+## get the single populism score from multiple dimensions
+
+```{r}
+DE2_measure.model <- '
+pc =~ POPpc1 + POPpc2 + POPpc3 # people-centrism
+ae =~ POPae1 + POPae2 + POPae3 # anti-elitism
+mw =~ POPmw1 + POPmw2 + POPmw3 # manichean view of politics
+'
+DE2_measure.cfa <- cfa(DE2_measure.model, DE2, estimator='mlr', mimic='mplus',missing='fiml', sample.mean=T)
+range01 <- function(x){(x-min(x,na.rm=T))/(max(x,na.rm=T)-min(x,na.rm=T))}
+dimensions<-predict(DE2_measure.cfa)[,1:3]
+dimensions<-apply(dimensions,2,range01)
+pop_DE2 <- dimensions[,1]*dimensions[,2]*dimensions[,3]
+DE2$pop<-pop_DE2
+```
+
+## political engagement strategy:
+## (+) engagement for the support of the Leipzig demonstration
+## (-) engagement for the support of the PEGIDA demonstration
+
+```{r}
+DE2_model <- '
+dsim =~ GrpIDdsim1 + GrpIDdsim2 + GrpIDdsim3 # group dissimilarity
+datt =~ GrpIDdatt1 + GrpIDdatt2 + GrpIDdatt3 # group detachment
+dsim ~~ datt # correlation between endogeneous variables
+dsim ~ pop # regression
+datt ~ pop # regression
+'
+DE2_r_fit <- sem (DE2_model,DE2, estimator="mlr", mimic="mplus", missing="fiml",
+                  group = "EXPTRT", sample.mean = T,
+                  group.equal=c("loadings", "intercepts",
+                                "residuals", "residual.covariances", "lv.variances", "lv.covariances",
+                                "regressions"),
+                  group.partial=c("means"))
+
+DE2_f_fit <- sem (DE2_model,DE2, estimator="mlr", mimic="mplus", missing="fiml",
+                  group = "EXPTRT", sample.mean = T,
+                  group.equal=c("residuals", "residual.covariances", "lv.variances", "lv.covariances"),
+                  group.partial=c("loadings", "intercepts", "regressions", "means"))
+```
+
+## model comparison & summary
+
+```{r}
+anova(DE2_r_fit, DE2_f_fit)
+cf <- compareFit(DE2_r_fit, DE2_f_fit, nested=T)
+summary(cf)
+```
+
+## SEM estimates summary
+
+```{r}
+summary(DE2_r_fit, fit.measures=T, standardized=T, rsquare=T)
+summary(DE2_f_fit, fit.measures=T, standardized=T, rsquare=T)
+```
+
+## plot the path models
+
+```{r, fig.width=15, fig.height=8}
+par(mfrow=c(2,2))
+semPaths(DE2_r_fit, "mod", "std", intercept=F, rotation = 2, edge.label.cex=.9, sizeMan = 5, sizeLat = 6, optimizeLatRes=T, ask=F)
+semPaths(DE2_f_fit, "mod", "std", intercept=F, rotation = 2, edge.label.cex=.9, sizeMan = 5, sizeLat = 6, optimizeLatRes=T, ask=F)
+dev.off()
+```
+
+# measurement models & construct reliabilities
+
+## US
+
+```{r, fig.width=15, fig.height=8}
+model <- '
+pop =~ ant1 + ant2 + ant3 + ant5 + pop2 + pop3 + pop4 # populist attitudes
+ase =~ anes617 + anes616 + anes615 # active support in elections
+rpa =~ radact1 + radact2 + radact3 + radact5 + radact6 # legitimate radical political action
+'
+fit <- cfa (model, data=US, estimator="mlr", mimic="mplus", missing="fiml", std.ov=T, std.lv=T)
+summary(fit, fit.measures=T, standardized=T, rsquare=T)
+semPaths(fit, "mod", "std", intercepts = F, edge.label.cex=1, rotation = 4, layout = "tree3")
+round(reliability(fit),2)
+```
+
+## DE1
+
+```{r, fig.width=15, fig.height=8}
+model <- '
+pc =~ POPpc3 + POPpc1 # people-centrism
+ae =~ POPae3 + POPae1 # anti-elitism
+mw =~ POPmwv3 + POPmwv1 # manichean view of politics
+gc =~ alwVote + KWAoGov + ActSocPol # active citizen (+) engagement
+vot =~ vp3 + vp1 # not voting (-) engagement
+'
+fit <- cfa (model, data=DE1, estimator="mlr", mimic="mplus", missing="fiml", std.ov=T, std.lv=T)
+summary(fit, fit.measures=T, standardized=T, rsquare=T)
+semPaths(fit, "mod", "std", intercepts = F, edge.label.cex=1, rotation = 4, layout = "tree3")
+round(reliability(fit),2)
+```
+
+## DE2
+
+```{r, fig.width=15, fig.height=8}
+model <- '
+pc =~ POPpc1 + POPpc2 + POPpc3 # people-centrism
+ae =~ POPae1 + POPae2 + POPae3 # anti-elitism
+mw =~ POPmw1 + POPmw2 + POPmw3 # manichean view of politics
+dsim =~ GrpIDdsim1 + GrpIDdsim2 + GrpIDdsim3 # group dissimilarity
+datt =~ GrpIDdatt1 + GrpIDdatt2 + GrpIDdatt3 # group detachment
+'
+fit <- cfa (model, data=DE2, estimator="mlr", mimic="mplus", missing="fiml", std.ov=T, std.lv=T)
+summary(fit, fit.measures=T, standardized=T, rsquare=T)
+semPaths(fit, "mod", "std", intercepts = F, edge.label.cex=1, rotation = 4, layout = "tree3")
+round(reliability(fit),2)
+```
+
+# get the descriptive statistics
+
+## US
+
+```{r}
+US %>% 
+  select(ant1,ant2,ant3,ant5,pop2,pop3, pop4,anes617,anes616,anes615,radact1,radact2,radact3,radact5,radact6) %>% 
+  gather("Variable", "value") %>% 
+  group_by(Variable) %>% 
+  summarise(Mean=mean(value, na.rm=T), 
+            SD=sd(value, na.rm=T), 
+            min=min(value, na.rm=T), 
+            max=max(value, na.rm=T), 
+            '% Missing'=100*length(which(is.na(value)))/n()) %>% 
+  kable(digits=2, format="pandoc", caption="Descriptive Statistics US")
+US_fdp <- US %>% select(ant1,ant2,ant3,ant5,pop2,pop3, pop4,anes617,anes616,anes615,radact1,radact2,radact3,radact5,radact6)
+s1dp <- ggplot(melt(US_fdp),aes(x=value)) + geom_density() + facet_wrap(~variable) + ggtitle("US: Density plots of the items used in Study 1")
+```
+
+## DE1
+
+```{r}
+DE1 %>% 
+  select(POPpc3,POPpc1,POPae3,POPae1,POPmwv3,POPmwv1,alwVote,KWAoGov,ActSocPol,vp3,vp1) %>% 
+  gather("Variable", "value") %>% 
+  group_by(Variable) %>% 
+  summarise(Mean=mean(value, na.rm=T), 
+            SD=sd(value, na.rm=T), 
+            min=min(value, na.rm=T), 
+            max=max(value, na.rm=T), 
+            '% Missing'=100*length(which(is.na(value)))/n()) %>% 
+  kable(digits=2, format="pandoc", caption="Descriptive Statistics DE 1")
+DE1_fdp <- DE1 %>% select(POPpc3,POPpc1,POPae3,POPae1,POPmwv3,POPmwv1,alwVote,KWAoGov,ActSocPol,vp3,vp1)
+s2dp <- ggplot(melt(DE1_fdp),aes(x=value)) + geom_density() + facet_wrap(~variable) + ggtitle("DE: Density plots of the items used in Study 2")
+```
+
+## DE2
+
+```{r}
+DE2 %>% 
+  select(POPpc1,POPpc2,POPpc3,POPae1,POPae2,POPae3,POPmw1,POPmw2,POPmw3,GrpIDdsim1,GrpIDdsim2,GrpIDdsim3,GrpIDdatt1,GrpIDdatt2,GrpIDdatt3) %>% 
+  gather("Variable", "value") %>% 
+  group_by(Variable) %>% 
+  summarise(Mean=mean(value, na.rm=T), 
+            SD=sd(value, na.rm=T), 
+            min=min(value, na.rm=T), 
+            max=max(value, na.rm=T), 
+            '% Missing'=100*length(which(is.na(value)))/n()) %>% 
+  kable(digits=2, format="pandoc", caption="Descriptive Statistics DE2")
+DE2_fdp <- DE2 %>% select(POPpc1,POPpc2,POPpc3,POPae1,POPae2,POPae3,POPmw1,POPmw2,POPmw3,GrpIDdsim1,GrpIDdsim2,GrpIDdsim3,GrpIDdatt1,GrpIDdatt2,GrpIDdatt3)
+s3dp <- ggplot(melt(DE2_fdp),aes(x=value)) + geom_density() + facet_wrap(~variable) + ggtitle("DE: Density plots of the items used in Study 3")
+```
+
+
+```{r, fig.width=15, fig.height=8}
+gridExtra::grid.arrange(s1dp,s2dp,s3dp, nrow=2, ncol=2)
+```
+
+
+# Study 2
+## Figure 1: self-report political orientation
+
+```{r}
+table(DE1$POlr)
+DE1$POlr <- factor(DE1$POlr,
+                   levels = c(1,2,3,4,5,6,7,8),
+                   labels = c("Left","2","3", "4","5","6","7","Right"))
+
+DE1 %>% select(POlr) %>% drop_na() %>% ggplot(., aes(x=POlr)) + 
+  geom_bar(aes(y = (..count..)),fill="grey", alpha=0.6) + 
+  geom_text(aes(y = (..count..) ,label =   ifelse((..count..)==0,"",scales::percent((..count..)/sum(..count..)))), stat="count",colour="black") +
+  theme_bw() +
+  xlab("Self-Report Political Orientation in %") +
+  ylab("Frequency") + 
+  labs(title="Political orientation of the German university students in study 2")
+```
+
+
+# Study 3
+## Figure 2: self-report political orientation
+
+```{r}
+table(DE2$PolOrLR)
+DE2$PolOrLR <- factor(DE2$PolOrLR,
+                      levels = c(1,2,3,4,5,6,7),
+                      labels = c("Left","2","3", "4","5","6","Right"))
+DE2 %>% select(PolOrLR) %>% drop_na() %>% ggplot(., aes(x=PolOrLR)) + 
+  geom_bar(aes(y = (..count..)),fill="grey", alpha=0.6) + 
+  geom_text(aes(y = (..count..) ,label =   ifelse((..count..)==0,"",scales::percent((..count..)/sum(..count..)))), stat="count",colour="black") +
+  theme_bw() +
+  xlab("Self-Report Political Orientation in %") +
+  ylab("Frequency") + 
+  labs(title="Political orientation of the German university students in study 3")
+```
+

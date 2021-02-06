@@ -1,0 +1,95 @@
+---
+pagetitle: "MMA, Ph.D., Teaching"
+---
+
+<br />
+
+<style>
+.column-left{
+  float: left;
+  width: 50%;
+  text-align: left;
+}
+
+.column-right{
+  float: right;
+  width: 50%;
+  text-align: right;
+}
+</style>
+
+<div class="column-left">
+
+# Workshops for PhD Students
+
+__04/2020__ ["Structural Equation Modeling with R"](MMA_BIGSSS_2020_outline_SEM_with_R.pdf) Bremen International Graduate School of Social Sciences (2 days)
+
+__02/2020__ “Introduction to Structural Equation Modeling” University of Oldenburg, Graduate School for the Social Sciences and the Humanities (2 days)
+
+__06/2019__ “Introduction to Structural Equation Modeling” Bremen International Graduate School of Social Sciences (1 day)
+
+__03/2019__ “Psychometrics and Network Modeling for Attitudinal Data” University of Marburg, Department of Social Psychology (1 day)
+
+</div>
+
+<div class="column-right">
+  
+# Regular Teaching
+
+__Wintersemester 2019/2020 (University of Oldenburg)__
+
+Research Methods for Transcultural Contexts -- M.A. level
+
+A Gentle Introduction to Quantitative Methods -- M.A. level
+
+__Wintersemester 2018/2019 (University of Oldenburg)__
+
+Research Methods for Transcultural Contexts -- M.A. level
+
+A Gentle Introduction to Quantitative Methods -- M.A. level
+
+Policy Analysis -- M.A. level
+
+__Sommersemester 2018 (University of Oldenburg)__
+
+[Nationalism, Populism, Racism](MMA__NPR__Seminar1.07.085.pdf) -- B.A. level
+
+[Religion, Nationalism, Populism](MMA__RNP__Seminar1.07.095.pdf) -- B.A. level
+
+[Nationalism, Politics and Migration in Germany](MMA__NPMG__Seminar1.07.096.pdf) -- B.A. level
+
+__Wintersemester 2017/2018 (University of Oldenburg)__
+
+[Nationalisms in a Comparative Perspective](MMA__NCP__Seminar1.07.052.pdf) -- B.A. level
+
+[Academic Writing](MMA__AW__Seminar1.07.043-44.pdf) -- B.A. level
+
+Academic Writing -- B.A. level
+
+Research Methods for Transcultural Contexts -- M.A. level
+
+__Sommersemester 2017 (University of Oldenburg)__
+<br />__Wintersemester 2016/2017 (University of Oldenburg)__
+<br />__Sommersemester 2016 (University of Oldenburg)__
+<br />...
+
+
+__Wintersemester 2015/2016 (University of Oldenburg)__
+
+[Introduction to Political Psychology](MMA__PP__Seminar1.07.054.pdf) -- B.A. level
+
+Nationalisms in a Comparative Perspective -- B.A. level
+
+Academic Writing -- B.A. level
+
+...
+
+__Summer semester 2012 (Bilkent University)__
+
+Introduction to Social Psychology -- B.A. level
+
+__Winter semester 2011/2012 (Bilkent University)__
+
+Introduction to Sociology -- B.A. level
+
+</div>
