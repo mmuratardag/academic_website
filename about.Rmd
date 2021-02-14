@@ -54,7 +54,7 @@ Before academic life, I was a sales manager at a [multi-national outdoor adverti
 <thead>
   <tr>
     <th class="tg-vask"><img src="ws_img/code.jpeg" style="width:95%; margin-right: 0px" align="left"></th>
-    <th class="tg-tt8u">I am proficient in the broad applications of (1) the general structural equation modeling framework (2) psychometric networks (3) social network analysis (4) quantitative text analysis (5) machine learning. I actively work with R. I am Python literate. I turn to Mplus when necessary – that is rare, though.</th>
+    <th class="tg-tt8u">I am proficient in the broad applications of (1) the general structural equation modeling framework (2) psychometric networks (3) social network analysis (4) quantitative text analysis (5) machine learning. I actively work with R and Python. I turn to Mplus when necessary – that is rare, though.</th>
   </tr>
 </thead>
 <tbody>

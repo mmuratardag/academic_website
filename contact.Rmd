@@ -1,5 +1,8 @@
 ---
-pagetitle: "MMA, Ph.D., Contact"
+pagetitle: MMA, Ph.D., Contact
+output:
+  html_document:
+    df_print: paged
 ---
 
 <style type="text/css">
