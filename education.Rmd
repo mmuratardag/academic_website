@@ -23,3 +23,18 @@ pagetitle: "MMA, Ph.D., Education"
 * __Istanbul Bilgi University__
     * [Department of International Relations](https://www.bilgi.edu.tr/en/academic/faculty-of-social-sciences-and-humanities/international-relations){target="_blank"}
       * B.A. International Relations <font size="1">[1999-2004]</font>
+      
+
+<br>
+<img src="ws_img/certificate_color.png" style="width:15%; margin-right: 0px" align="left">
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+* __Spiced Academy Berlin__
+    * [Data Science](https://www.spiced-academy.com/en/program/data-science){target="_blank"} 
+      * Bootcamp <font size="1">[2021]</font>
