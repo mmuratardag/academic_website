@@ -1,8 +1,5 @@
 ---
-pagetitle: MMA, Ph.D., Contact
-output:
-  html_document:
-    df_print: paged
+pagetitle: "MMA, Ph.D., Contact"
 ---
 
 <style type="text/css">
@@ -18,20 +15,16 @@ knitr::opts_chunk$set(echo = F)
 ```
 
 <br />
+<br />
+<br />
+<br />
 
 ```{r}
-icon::fa(name = "envelope",
-         size = 2, fixed_width = F,
-  animate = "still", rotate = 0, flip = "none", border = F,
-  pull = "left", other = NULL)
+icon::fontawesome$solid$envelope
 ```
-
 <span class="ltrText">ten.gadratarumm
 ```{r}
-icon::fa(name = "at",
-         size = 1, fixed_width = F,
-  animate = "still", rotate = 0, flip = "none", border = F,
-  pull = "NULL", other = NULL)
+icon::fontawesome$solid$at
 ```
 amm</span>
 
@@ -39,62 +32,48 @@ amm</span>
 
 [
 ```{r}
-icon::ai(name = "google-scholar",
-         size = 3, fixed_width = F,
-  animate = "still", rotate = 0, flip = "none", border = F,
-  pull = "left", other = NULL)
+icon::academicons$`google-scholar`
 ```
 ](https://scholar.google.com/citations?user=6MoKqzkAAAAJ&hl=en){target="_blank"}
 
 [
 ```{r}
-icon::ai(name = "orcid",
-         size = 3, fixed_width = F,
-  animate = "still", rotate = 0, flip = "none", border = F,
-  pull = "left", other = NULL)
+icon::academicons$orcid
 ```
 ](https://orcid.org/0000-0001-9111-1088){target="_blank"}
 
 [
 ```{r}
-icon::ai(name = "osf",
-         size = 3, fixed_width = F,
-  animate = "still", rotate = 0, flip = "none", border = F,
-  pull = "left", other = NULL)
+icon::academicons$osf
 ```
 ](https://osf.io/4dvtj/){target="_blank"}
 
 [
 ```{r}
-icon::ai(name = "researchgate",
-         size = 3, fixed_width = F,
-  animate = "still", rotate = 0, flip = "none", border = F,
-  pull = "left", other = NULL)
+icon::academicons$researchgate
 ```
 ](https://www.researchgate.net/profile/M_Ardag){target="_blank"}
 
 [
 ```{r}
-icon::ai(name = "publons",
-         size = 3, fixed_width = F,
-  animate = "still", rotate = 0, flip = "none", border = F,
-  pull = "left", other = NULL)
+icon::academicons$publons
 ```
 ](https://publons.com/researcher/3378804/m-murat-ardag/){target="_blank"}
 
 [
 ```{r}
-icon::ai(name = "publons",
-         size = 3, fixed_width = F,
-  animate = "still", rotate = 0, flip = "none", border = F,
-  pull = "left", other = NULL)
+icon::academicons$publons
 ```
 ](https://publons.com/researcher/3623074/m-murat-ardag/){target="_blank"}
 
-<br>
-<br>
-<br>
+[
+```{r}
+icon::fontawesome$brands$github
+```
+](https://github.com/mmuratardag){target="_blank"} 
 
+<div>
 GDPR & LEGAL DISCLAIMER
 <br>
 The new General Data Protection Regulation (GDPR), May 25 2018, requires a data transparency statement. This site is made with R Markdown and hosted on GitHub. I do not set any cookies, I do not track any visitors, I do not collect any type of data. Read [this](https://docs.github.com/en/github/site-policy/github-terms-of-service){target="_blank"} to have an idea about what GitHub's ToS are. 
+</div>
