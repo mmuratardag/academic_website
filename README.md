@@ -1,2 +1,2 @@
 # Repository for the academic website
-www.mmuratardag.net
+https://mmuratardag.github.io/academic_website/
