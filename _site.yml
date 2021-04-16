@@ -16,7 +16,7 @@ navbar:
     - text: "About"
       href: about.html
     - text: "Blog"
-      href: blog.html
+      href: https://mmuratardag.github.io/blog_posts
       
   right:
     - icon: fa-at fa-lg
