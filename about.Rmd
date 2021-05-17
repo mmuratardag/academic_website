@@ -46,6 +46,10 @@ I specialize in psychometrics, psycholinguistics, cross-cultural research, and m
     <td class="tg-tt8u"> I attended the following for further training.
 <br>
 
+* Curran-Bauer Analytics (Chapel Hill, NC, USA) [06/2021] ^3^
+  * __Machine Learning: Theory and Applications__
+* Curran-Bauer Analytics (Chapel Hill, NC, USA) [06/2021] ^3^
+  * __Longitudinal Structural Equation Modeling__
 * Curran-Bauer Analytics (Chapel Hill, NC, USA) [12/2020] ^3^
   * __Mixture Modeling and Latent Class Analysis__
 * BIGSSS (Bremen, Germany) [10/2020] ^3^
