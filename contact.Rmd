@@ -20,11 +20,11 @@ knitr::opts_chunk$set(echo = F)
 <br />
 
 ```{r}
-icon::fontawesome$solid$envelope
+icons::fontawesome$solid$envelope
 ```
 <span class="ltrText">ten.gadratarumm
 ```{r}
-icon::fontawesome$solid$at
+icons::fontawesome$solid$at
 ```
 amm</span>
 
@@ -32,43 +32,37 @@ amm</span>
 
 [
 ```{r}
-icon::academicons$`google-scholar`
+icons::academicons$`google-scholar`
 ```
 ](https://scholar.google.com/citations?user=6MoKqzkAAAAJ&hl=en){target="_blank"}
 
 [
 ```{r}
-icon::academicons$orcid
+icons::academicons$orcid
 ```
 ](https://orcid.org/0000-0001-9111-1088){target="_blank"}
 
 [
 ```{r}
-icon::academicons$osf
+icons::academicons$osf
 ```
 ](https://osf.io/4dvtj/){target="_blank"}
 
 [
 ```{r}
-icon::academicons$researchgate
+icons::academicons$researchgate
 ```
 ](https://www.researchgate.net/profile/M_Ardag){target="_blank"}
 
 [
 ```{r}
-icon::academicons$publons
-```
-](https://publons.com/researcher/3378804/m-murat-ardag/){target="_blank"}
-
-[
-```{r}
-icon::academicons$publons
+icons::academicons$publons
 ```
 ](https://publons.com/researcher/3623074/m-murat-ardag/){target="_blank"}
 
 [
 ```{r}
-icon::fontawesome$brands$github
+icons::fontawesome$brands$github
 ```
 ](https://github.com/mmuratardag){target="_blank"} 
 
