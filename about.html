@@ -13,19 +13,23 @@
 
 <title>MMA, Ph.D., About</title>
 
-<script src="site_libs/header-attrs-2.5/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.8/header-attrs.js"></script>
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/spacelab.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
-<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
-<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
-<script src="site_libs/htmlwidgets-1.5.3/htmlwidgets.js"></script>
-<script src="site_libs/tippyjs-2.5.2/tippy.all.min.js"></script>
-<script src="site_libs/tippy-binding-0.0.1/tippy.js"></script>
 <link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
 <link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
 
@@ -41,32 +45,7 @@
 
 
 
-<style type="text/css">
-h1 {
-  font-size: 34px;
-}
-h1.title {
-  font-size: 38px;
-}
-h2 {
-  font-size: 30px;
-}
-h3 {
-  font-size: 24px;
-}
-h4 {
-  font-size: 18px;
-}
-h5 {
-  font-size: 16px;
-}
-h6 {
-  font-size: 12px;
-}
-.table th:not([align]) {
-  text-align: left;
-}
-</style>
+
 
 
 
@@ -76,10 +55,6 @@ h6 {
   max-width: 940px;
   margin-left: auto;
   margin-right: auto;
-}
-code {
-  color: inherit;
-  background-color: rgba(0, 0, 0, 0.04);
 }
 img {
   max-width:100%;
@@ -96,40 +71,13 @@ button.code-folding-btn:focus {
 summary {
   display: list-item;
 }
+pre code {
+  padding: 0;
+}
 </style>
 
 
 <style type="text/css">
-/* padding for bootstrap navbar */
-body {
-  padding-top: 52px;
-  padding-bottom: 40px;
-}
-/* offset scroll position for anchor links (for fixed navbar)  */
-.section h1 {
-  padding-top: 57px;
-  margin-top: -57px;
-}
-.section h2 {
-  padding-top: 57px;
-  margin-top: -57px;
-}
-.section h3 {
-  padding-top: 57px;
-  margin-top: -57px;
-}
-.section h4 {
-  padding-top: 57px;
-  margin-top: -57px;
-}
-.section h5 {
-  padding-top: 57px;
-  margin-top: -57px;
-}
-.section h6 {
-  padding-top: 57px;
-  margin-top: -57px;
-}
 .dropdown-submenu {
   position: relative;
 }
@@ -157,7 +105,7 @@ body {
   margin-right: -10px;
 }
 .dropdown-submenu:hover>a:after {
-  border-left-color: #ffffff;
+  border-left-color: #adb5bd;
 }
 .dropdown-submenu.pull-left {
   float: none;
@@ -169,7 +117,7 @@ body {
 }
 </style>
 
-<script>
+<script type="text/javascript">
 // manage active state of menu based on current page
 $(document).ready(function () {
   // active menu anchor
@@ -180,10 +128,23 @@ $(document).ready(function () {
   var menuAnchor = $('a[href="' + href + '"]');
 
   // mark it active
-  menuAnchor.parent().addClass('active');
+  menuAnchor.tab('show');
 
   // if it's got a parent navbar menu mark it active as well
   menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
 });
 </script>
 
@@ -195,7 +156,6 @@ $(document).ready(function () {
   max-height: 500px;
   min-height: 44px;
   overflow-y: auto;
-  background: white;
   border: 1px solid #ddd;
   border-radius: 4px;
 }
@@ -299,7 +259,7 @@ $(document).ready(function () {
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="contact.html">
-    <span class="fa fa-at fa-lg"></span>
+    <span class="fas fa-at fa-lg"></span>
      
   </a>
 </li>
@@ -308,7 +268,7 @@ $(document).ready(function () {
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-<div class="fluid-row" id="header">
+<div id="header">
 
 
 
@@ -317,9 +277,7 @@ $(document).ready(function () {
 
 
 <p><br/> I am an affiliated postdoc fellow at <a href="https://www.bigsss-bremen.de" target="_blank">Bremen International School of Social Sciences</a>. Before this, I was a postdoc fellow at the <a href="https://www.jacobs-university.de/department/psychology-methods" target="_blank">Psychology &amp; Methods</a> department of <a href="https://www.jacobs-university.de" target="_blank">Jacobs University</a> in a project funded by <a href="https://www.businessfinland.fi/en/" target="_blank">Business Finland</a> and <a href="https://www.hofstede-insights.com/" target="_blank">Hofstede Insights</a>. At the <a href="https://uol.de/en/" target="_blank">University of Oldenburg</a>, I worked as the interim academic coordinator of <a href="https://www.emmir.org/" target="_blank">European Master in Migration &amp; Intercultural Relations</a>, also as a lecturer at the <a href="https://uol.de/en/socialsciences" target="_blank">Institute of Social Sciences</a>.</p>
-<p>Before academic life, I was a sales manager at a <a href="https://en.wikipedia.org/wiki/News_Outdoor_Group" target="_blank">multi-national outdoor advertising company</a> in Istanbul. During my undergrad studies, I worked as a <span id="htmlwidget-d063c6c456ff33df6b99" class="tippy html-widget" width="672" height="480"></span>
-<script type="application/json" data-for="htmlwidget-d063c6c456ff33df6b99">{"x":{"opts":{"position":"right","theme":"light"},"tooltip":" in these magazines: Bant Mag, REC, Forward, Studyo Imge","text":"music journalist."},"evals":[],"jsHooks":[]}</script></p>
-<p>I specialize in psychometrics, psycholinguistics, cross-cultural research, and modeling subjectivity. My work almost always involves one of the following. (1) machine learning &amp; deep learning; (2) natural language processing; (3) the general structural equation modeling framework; (4) psychometric networks; (5) social network analysis. To generate new insights, I utilize my domain knowledge in data science, political science, and psychology. Access my CV from <a href="static/MMA_AC_v2.7.pdf" target="_blank">here</a>.</p>
+<p>I specialize in psychometrics, psycholinguistics, cross-cultural research, and modeling subjectivity. My work almost always involves one of the following. (1) machine learning &amp; deep learning; (2) natural language processing; (3) the general structural equation modeling framework; (4) psychometric networks; (5) social network analysis. To generate new insights, I utilize my domain knowledge in data science, political science, and psychology. Access my CV from <a href="static/MMA_AC_v2.8.pdf" target="_blank">here</a>.</p>
 <style type="text/css">
 .tg  {border:none;border-collapse:collapse;border-spacing:0;}
 .tg td{border-style:solid;border-width:0px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;
@@ -440,6 +398,7 @@ I actively work with R and Python. I turn to Mplus when necessary – that is ra
 </tr>
 </tbody>
 </table>
+<p>Before academic life, I was a sales manager at a <a href="https://en.wikipedia.org/wiki/News_Outdoor_Group" target="_blank">multi-national outdoor advertising company</a> in Istanbul. During my undergrad studies, I worked as a music journalist.</p>
 
 
 
@@ -468,7 +427,7 @@ $(document).ready(function () {
 
 $(document).ready(function () {
   $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
+    $(this).parent().toggleClass('nav-tabs-open');
   });
 });
 </script>
