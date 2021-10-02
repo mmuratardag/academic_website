@@ -13,16 +13,23 @@
 
 <title>MMA, Ph.D., Publications</title>
 
-<script src="site_libs/header-attrs-2.5/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.10/header-attrs.js"></script>
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/spacelab.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
-<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
-<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
 <link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
 <link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
 
@@ -38,32 +45,7 @@
 
 
 
-<style type="text/css">
-h1 {
-  font-size: 34px;
-}
-h1.title {
-  font-size: 38px;
-}
-h2 {
-  font-size: 30px;
-}
-h3 {
-  font-size: 24px;
-}
-h4 {
-  font-size: 18px;
-}
-h5 {
-  font-size: 16px;
-}
-h6 {
-  font-size: 12px;
-}
-.table th:not([align]) {
-  text-align: left;
-}
-</style>
+
 
 
 
@@ -73,10 +55,6 @@ h6 {
   max-width: 940px;
   margin-left: auto;
   margin-right: auto;
-}
-code {
-  color: inherit;
-  background-color: rgba(0, 0, 0, 0.04);
 }
 img {
   max-width:100%;
@@ -93,40 +71,13 @@ button.code-folding-btn:focus {
 summary {
   display: list-item;
 }
+pre code {
+  padding: 0;
+}
 </style>
 
 
 <style type="text/css">
-/* padding for bootstrap navbar */
-body {
-  padding-top: 52px;
-  padding-bottom: 40px;
-}
-/* offset scroll position for anchor links (for fixed navbar)  */
-.section h1 {
-  padding-top: 57px;
-  margin-top: -57px;
-}
-.section h2 {
-  padding-top: 57px;
-  margin-top: -57px;
-}
-.section h3 {
-  padding-top: 57px;
-  margin-top: -57px;
-}
-.section h4 {
-  padding-top: 57px;
-  margin-top: -57px;
-}
-.section h5 {
-  padding-top: 57px;
-  margin-top: -57px;
-}
-.section h6 {
-  padding-top: 57px;
-  margin-top: -57px;
-}
 .dropdown-submenu {
   position: relative;
 }
@@ -154,7 +105,7 @@ body {
   margin-right: -10px;
 }
 .dropdown-submenu:hover>a:after {
-  border-left-color: #ffffff;
+  border-left-color: #adb5bd;
 }
 .dropdown-submenu.pull-left {
   float: none;
@@ -166,7 +117,7 @@ body {
 }
 </style>
 
-<script>
+<script type="text/javascript">
 // manage active state of menu based on current page
 $(document).ready(function () {
   // active menu anchor
@@ -177,10 +128,23 @@ $(document).ready(function () {
   var menuAnchor = $('a[href="' + href + '"]');
 
   // mark it active
-  menuAnchor.parent().addClass('active');
+  menuAnchor.tab('show');
 
   // if it's got a parent navbar menu mark it active as well
   menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
 });
 </script>
 
@@ -192,7 +156,6 @@ $(document).ready(function () {
   max-height: 500px;
   min-height: 44px;
   overflow-y: auto;
-  background: white;
   border: 1px solid #ddd;
   border-radius: 4px;
 }
@@ -305,7 +268,7 @@ $(document).ready(function () {
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-<div class="fluid-row" id="header">
+<div id="header">
 
 
 
@@ -317,8 +280,9 @@ $(document).ready(function () {
 <ul>
 <li><strong>Articles in Refereed Journals</strong>
 <ul>
-<li>Mole, R.C., Golec de Zavala, A., Ardag, M.M. (2021 (<em>forthcoming</em>)) Homophobia and national collective narcissism in populist Poland <em>European Journal of Sociology</em> <a href="https://osf.io/p5xjy/" target="_blank"><font size="1"><strong>Replication Material</strong></font></a></li>
-<li>Öney, B., Ardag, M.M. (2021 (<em>forthcoming</em>)) The Relationship between Diffuse Support for Democracy and Governing Party Support in a Hybrid Regime: Evidence with Four Representative Samples from Turkey <em>Turkish Studies</em> <a href="https://doi.org/10.1080/14683849.2021.1894137" target="_blank">https://doi.org/10.1080/14683849.2021.1894137</a> <a href="https://osf.io/fg35n/" target="_blank"><font size="1"><strong>Replication Material</strong></font></a></li>
+<li>Öney, B., Ardag, M.M. (2021 (<em>accepted with minor revisions</em>)) Two stories with one happy ending. What constitutes the political culture differences between Egypt and Tunisia during and after the Uprisings? <em>Democratization</em></li>
+<li>Mole, R.C., Golec de Zavala, A., Ardag, M.M. (2021 (<em>early view</em>)) Homophobia and national collective narcissism in populist Poland <em>European Journal of Sociology</em> <a href="https://doi.org/10.1017/S0003975621000072" target="_blank">https://doi.org/10.1017/S0003975621000072</a> <a href="https://osf.io/p5xjy/" target="_blank"><font size="1"><strong>Replication Material</strong></font></a></li>
+<li>Öney, B., Ardag, M.M. (2021 (<em>on-line first</em>)) The Relationship between Diffuse Support for Democracy and Governing Party Support in a Hybrid Regime: Evidence with Four Representative Samples from Turkey <em>Turkish Studies</em> <a href="https://doi.org/10.1080/14683849.2021.1894137" target="_blank">https://doi.org/10.1080/14683849.2021.1894137</a> <a href="https://osf.io/fg35n/" target="_blank"><font size="1"><strong>Replication Material</strong></font></a></li>
 <li>Ponizovskiy, V., Ardag, M.M., Grigoryan, L., Boyd, R., Dobewall, H. &amp; Holtz P. (2020) Development and validation of the Personal Values Dictionary: A theory-driven tool for investigating references to basic human values in text <em>European Journal Of Personality</em> 34(5), 885–902 <a href="https://doi.org/10.1002/per.2294" target="_blank">https://doi.org/10.1002/per.2294</a> <a href="https://osf.io/vt8nf/" target="_blank"><font size="1"><strong>Replication Material</strong></font></a></li>
 <li>Ardag, M.M., Thomeczek, J.P. (2020 (forthcoming)). How many different types of populists are there in Germany? An experimental approach with multiple methods, <em>Journal of Theoretical Social Psychology</em> <a href="https://doi.org/10.1002/jts5.70" target="_blank">https://doi.org/10.1002/jts5.70</a> <a href="https://osf.io/v95ut/" target="_blank"><font size="1"><strong>Replication Material</strong></font></a></li>
 <li>Ardag, M.M., Castanho Silva, B., Thomeczek, J.P., Bandlow-Raffalski, S.F. &amp; Littvay, L. (2020). Populist Attitudes and Political Engagement: Ugly, Bad, and Sometimes Good? <em>Representation</em> 56(3) 307-330. <a href="https://doi.org/10.1080/00344893.2019.1661870" target="_blank">https://doi.org/10.1080/00344893.2019.1661870</a> <a href="https://osf.io/g8d53/" target="_blank"><font size="1"><strong>Replication Material</strong></font></a></li>
@@ -366,7 +330,7 @@ $(document).ready(function () {
 
 $(document).ready(function () {
   $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
+    $(this).parent().toggleClass('nav-tabs-open');
   });
 });
 </script>
