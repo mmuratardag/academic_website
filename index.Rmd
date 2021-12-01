@@ -15,6 +15,7 @@ I am a data scientist and a political psychologist -- visit [here](about.html) f
 <br />
 
 __What's new?__
+<br/> ***01/12/2021***: Manuscript with [Öney](https://bernaoney.github.io/){target="_blank"} is accepted to [*Democratization*](https://www.tandfonline.com/toc/fdem20/current){target="_blank"}. Replication material and pre-print are [here](https://osf.io/a4e7n/){target="_blank"}
 <br/> ***29/07/2021***: Blog post -- [Psychological profiles and socio-demographics …](https://mmuratardag.github.io/blog_posts/blog_2021_07_29.html)
 <br/> ***08/03/2021***: Blog post -- [Visualizing vDEM democracy scores using plotly…](https://mmuratardag.github.io/blog_posts/blog_2021_03_08.html)
 <br/> ***01/02/2021***: Manuscript with [Mole](https://www.ucl.ac.uk/ssees/people/richard-mole){target="_blank"} and [Golec de Zavala](https://www.gold.ac.uk/psychology/staff/golec-de-zavala-agnieszka/){target="_blank"} is published in the [*European Journal of Sociology*](https://www.cambridge.org/core/journals/european-journal-of-sociology-archives-europeennes-de-sociologie){target="_blank"}; replication material are available [here](https://osf.io/p5xjy/){target="_blank"}; early view is [here](https://doi.org/10.1017/S0003975621000072){target="_blank"}.
