@@ -12,7 +12,7 @@ pagetitle: "MMA, Ph.D., Publications"
 <br>
 
 * __Articles in Refereed Journals__
-    * Öney, B., Ardag, M.M. (2021 (_accepted/forthcoming_)) Two stories with one happy ending. What constitutes the political culture
+    * Öney, B., Ardag, M.M. (2021 (_early view_)) Two stories with one happy ending. What constitutes the political culture
 differences between Egypt and Tunisia during and after the Uprisings? *Democratization* [https://doi.org/10.1080/13510347.2021.2013823](https://doi.org/10.1080/13510347.2021.2013823){target="_blank"} [<font size="1">**Replication Material**</font>](https://osf.io/a4e7n/){target="_blank"}
     * Mole, R.C., Golec de Zavala, A., Ardag, M.M. (2021 (_early view_)) Homophobia and national collective narcissism in populist Poland *European Journal of Sociology* [https://doi.org/10.1017/S0003975621000072](https://doi.org/10.1017/S0003975621000072){target="_blank"} [<font size="1">**Replication Material**</font>](https://osf.io/p5xjy/){target="_blank"}
     * Öney, B., Ardag, M.M. (2021 (_on-line first_)) The Relationship between Diffuse Support for Democracy and Governing Party Support in a Hybrid Regime: Evidence with Four Representative Samples from Turkey *Turkish Studies* [https://doi.org/10.1080/14683849.2021.1894137](https://doi.org/10.1080/14683849.2021.1894137){target="_blank"} [<font size="1">**Replication Material**</font>](https://osf.io/fg35n/){target="_blank"}
