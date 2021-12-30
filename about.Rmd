@@ -9,7 +9,7 @@ knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
 <br/>
 I am an affiliated postdoc fellow at [Bremen International School of Social Sciences](https://www.bigsss-bremen.de){target="_blank"}, [Jacobs University](https://www.jacobs-university.de){target="_blank"}. Before this, I was a postdoc fellow at the [Psychology & Methods](https://www.jacobs-university.de/department/psychology-methods){target="_blank"} department in a project funded by [Business Finland](https://www.businessfinland.fi/en/){target="_blank"} and [Hofstede Insights](https://www.hofstede-insights.com/){target="_blank"}. At the [University of Oldenburg](https://uol.de/en/){target="_blank"}, I worked as the interim academic coordinator of [European Master in Migration & Intercultural Relations](https://www.emmir.org/){target="_blank"}, also as a lecturer at the [Institute of Social Sciences](https://uol.de/en/socialsciences){target="_blank"}.
 
-I specialize in psychometrics, psycholinguistics, cross-cultural research, and modeling subjectivity. My work almost always involves one of the following. (1) machine learning & deep learning; (2) natural language processing; (3) the general structural equation modeling framework; (4) psychometric networks; (5) social network analysis. To generate new insights, I utilize my domain knowledge in data science, political science, and psychology. Access my CV from [here](static/MMA_AC_CV.pdf){target="_blank"}.
+Psychometrics, psycholinguistics, modeling subjectivity, and comparative politics are among my research interests. Access my CV from [here](static/MMA_AC_CV.pdf){target="_blank"}.
 
         
 <style type="text/css">
