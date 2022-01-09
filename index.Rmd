@@ -15,6 +15,7 @@ I am a data scientist and a political psychologist -- visit [here](about.html) f
 <br />
 
 __What's new?__
+<br/> ***09/01/2022***: Blog post -- [What was the highlight of my Ph.D. work?](https://mmuratardag.github.io/blog_posts/blog_2022_01_09.html)
 <br/> ***13/12/2021***: Manuscript with [Öney](https://bernaoney.github.io/){target="_blank"} is published in [*Democratization*](https://www.tandfonline.com/doi/full/10.1080/13510347.2021.2013823){target="_blank"}. Replication material and pre-print are [here](https://osf.io/a4e7n/){target="_blank"}
 <br/> ***29/07/2021***: Blog post -- [Psychological profiles and socio-demographics …](https://mmuratardag.github.io/blog_posts/blog_2021_07_29.html)
 <br/> ***08/03/2021***: Blog post -- [Visualizing vDEM democracy scores using plotly…](https://mmuratardag.github.io/blog_posts/blog_2021_03_08.html)
