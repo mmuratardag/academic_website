@@ -13,16 +13,23 @@
 
 <title>MMA, Ph.D., Education</title>
 
-<script src="site_libs/header-attrs-2.5/header-attrs.js"></script>
-<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<script src="site_libs/header-attrs-2.19/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/spacelab.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
-<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
-<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
 <link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
 <link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
 
@@ -38,32 +45,8 @@
 
 
 
-<style type="text/css">
-h1 {
-  font-size: 34px;
-}
-h1.title {
-  font-size: 38px;
-}
-h2 {
-  font-size: 30px;
-}
-h3 {
-  font-size: 24px;
-}
-h4 {
-  font-size: 18px;
-}
-h5 {
-  font-size: 16px;
-}
-h6 {
-  font-size: 12px;
-}
-.table th:not([align]) {
-  text-align: left;
-}
-</style>
+
+
 
 
 
@@ -73,10 +56,6 @@ h6 {
   max-width: 940px;
   margin-left: auto;
   margin-right: auto;
-}
-code {
-  color: inherit;
-  background-color: rgba(0, 0, 0, 0.04);
 }
 img {
   max-width:100%;
@@ -93,40 +72,16 @@ button.code-folding-btn:focus {
 summary {
   display: list-item;
 }
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
 </style>
 
 
 <style type="text/css">
-/* padding for bootstrap navbar */
-body {
-  padding-top: 52px;
-  padding-bottom: 40px;
-}
-/* offset scroll position for anchor links (for fixed navbar)  */
-.section h1 {
-  padding-top: 57px;
-  margin-top: -57px;
-}
-.section h2 {
-  padding-top: 57px;
-  margin-top: -57px;
-}
-.section h3 {
-  padding-top: 57px;
-  margin-top: -57px;
-}
-.section h4 {
-  padding-top: 57px;
-  margin-top: -57px;
-}
-.section h5 {
-  padding-top: 57px;
-  margin-top: -57px;
-}
-.section h6 {
-  padding-top: 57px;
-  margin-top: -57px;
-}
 .dropdown-submenu {
   position: relative;
 }
@@ -154,7 +109,7 @@ body {
   margin-right: -10px;
 }
 .dropdown-submenu:hover>a:after {
-  border-left-color: #ffffff;
+  border-left-color: #adb5bd;
 }
 .dropdown-submenu.pull-left {
   float: none;
@@ -166,7 +121,7 @@ body {
 }
 </style>
 
-<script>
+<script type="text/javascript">
 // manage active state of menu based on current page
 $(document).ready(function () {
   // active menu anchor
@@ -176,11 +131,28 @@ $(document).ready(function () {
     href = "index.html";
   var menuAnchor = $('a[href="' + href + '"]');
 
-  // mark it active
-  menuAnchor.parent().addClass('active');
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
 
-  // if it's got a parent navbar menu mark it active as well
-  menuAnchor.closest('li.dropdown').addClass('active');
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
 });
 </script>
 
@@ -192,13 +164,12 @@ $(document).ready(function () {
   max-height: 500px;
   min-height: 44px;
   overflow-y: auto;
-  background: white;
   border: 1px solid #ddd;
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before {
-  content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -206,16 +177,9 @@ $(document).ready(function () {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "&#xe258;";
-  border: none;
-}
-
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "";
+  content: "\e258";
   font-family: 'Glyphicons Halflings';
-  display: inline-block;
-  padding: 10px;
-  border-right: 1px solid #ddd;
+  border: none;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -259,7 +223,7 @@ $(document).ready(function () {
 <div class="navbar navbar-default  navbar-fixed-top" role="navigation">
   <div class="container">
     <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
@@ -284,9 +248,6 @@ $(document).ready(function () {
   <a href="teaching.html">Teaching</a>
 </li>
 <li>
-  <a href="about.html">About</a>
-</li>
-<li>
   <a href="https://mmuratardag.github.io">Data Scientist Website</a>
 </li>
 <li>
@@ -305,7 +266,7 @@ $(document).ready(function () {
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-<div class="fluid-row" id="header">
+<div id="header">
 
 
 
@@ -313,47 +274,173 @@ $(document).ready(function () {
 </div>
 
 
-<p><br> <img src="ws_img/diploma.png" style="width:15%; margin-right: 0px" align="left"> <br> <br> <br> <br> <br> <br> <br></p>
+<p><br>
+<img src="ws_img/diploma.png" style="width:15%; margin-right: 0px" align="left">
+<br> <br> <br> <br> <br> <br> <br></p>
 <ul>
 <li><strong>CvO Universität Oldenburg</strong>
 <ul>
-<li><a href="https://uol.de/en/socialsciences" target="_blank">Institute of Social Sciences</a>
+<li><a href="https://uol.de/en/socialsciences" target="_blank">Institute
+of Social Sciences</a>
 <ul>
 <li>Ph.D. in Political Science <font size="1">[2015-2018]</font></li>
 </ul></li>
 </ul></li>
 <li><strong>I.D. Bilkent University</strong>
 <ul>
-<li><a href="http://pols.bilkent.edu.tr" target="_blank">Department of Political Science &amp; Public Administration</a>
+<li><a href="http://pols.bilkent.edu.tr" target="_blank">Department of
+Political Science &amp; Public Administration</a>
 <ul>
-<li>M.A. without Thesis Equivalent; Post-Graduate Studies in Political Science <font size="1">[2008-2012]</font></li>
+<li>M.A. without Thesis Equivalent; Post-Graduate Studies in Political
+Science <font size="1">[2008-2012]</font></li>
 </ul></li>
 </ul></li>
 <li><strong>Galatasaray University</strong>
 <ul>
-<li><a href="http://ui.gsu.edu.tr" target="_blank">Department of International Relations</a>
+<li><a href="http://ui.gsu.edu.tr" target="_blank">Department of
+International Relations</a>
 <ul>
-<li>M.A. Regional &amp; Strategic Studies <font size="1">[2005-2008]</font></li>
+<li>M.A. Regional &amp; Strategic Studies
+<font size="1">[2005-2008]</font></li>
 </ul></li>
 </ul></li>
 <li><strong>Istanbul Bilgi University</strong>
 <ul>
-<li><a href="https://www.bilgi.edu.tr/en/academic/faculty-of-social-sciences-and-humanities/international-relations" target="_blank">Department of International Relations</a>
+<li><a
+href="https://www.bilgi.edu.tr/en/academic/faculty-of-social-sciences-and-humanities/international-relations"
+target="_blank">Department of International Relations</a>
 <ul>
 <li>B.A. International Relations <font size="1">[1999-2004]</font></li>
 </ul></li>
 </ul></li>
 </ul>
-<p><br> <img src="ws_img/certificate_color.png" style="width:15%; margin-right: 0px" align="left"> <br> <br> <br> <br> <br> <br> <br></p>
+<p><br>
+<img src="ws_img/certificate_color.png" style="width:15%; margin-right: 0px" align="left">
+<br> <br> <br> <br> <br> <br> <br></p>
 <ul>
 <li><strong>Spiced Academy Berlin</strong>
 <ul>
-<li><a href="https://www.spiced-academy.com/en/program/data-science" target="_blank">Data Science</a>
+<li><a href="https://www.spiced-academy.com/en/program/data-science"
+target="_blank">Data Science</a>
 <ul>
-<li>Bootcamp <font size="1">[2021]</font></li>
+<li>Bootcamp <font size="1">[January - March 2021]</font></li>
 </ul></li>
 </ul></li>
 </ul>
+<p><br>
+<img src="ws_img/ce.png" style="width:20%; margin-right: 0px" align="left">
+<br> <br> <br> <br> <br> <br> <br></p>
+<div
+id="i-attended-the-following-as-part-of-my-continuing-education-and-formal-training."
+class="section level4">
+<h4>I attended the following as part of my continuing education and
+formal training.</h4>
+<ul>
+<li>DataCamp [completed in 2021] <sup>4</sup>
+<ul>
+<li><strong>Statistician with R</strong></li>
+<li><strong>Data Scientist with R</strong></li>
+<li><strong>Data Engineer with Python</strong></li>
+<li><strong>SQL Fundamentals</strong></li>
+</ul></li>
+<li>Curran-Bauer Analytics (Chapel Hill, NC, USA) [06/2021] <sup>3</sup>
+<ul>
+<li><strong>Machine Learning: Theory and Applications</strong></li>
+</ul></li>
+<li>Curran-Bauer Analytics (Chapel Hill, NC, USA) [06/2021] <sup>3</sup>
+<ul>
+<li><strong>Longitudinal Structural Equation Modeling</strong></li>
+</ul></li>
+<li>Curran-Bauer Analytics (Chapel Hill, NC, USA) [12/2020] <sup>3</sup>
+<ul>
+<li><strong>Mixture Modeling and Latent Class Analysis</strong></li>
+</ul></li>
+<li>BIGSSS (Bremen, Germany) [10/2020] <sup>3</sup>
+<ul>
+<li><strong>Quantitative Text Analysis with Quanteda</strong></li>
+</ul></li>
+<li>RECSM UPF (Barcelona, Spain) [06-07/2020] <sup>1</sup>
+<ul>
+<li><strong>Big Data: Social Media Research &amp; Predictive
+Analytics</strong></li>
+<li><strong>Machine Learning for Social Sciences</strong></li>
+</ul></li>
+<li>BIGSSS (Bremen, Germany) [05/2020] <sup>3</sup>
+<ul>
+<li><strong>Fuzzy Set Analysis</strong></li>
+</ul></li>
+<li>Curran-Bauer Analytics (Chapel Hill, NC, USA) [05/2020] <sup>3</sup>
+<ul>
+<li><strong>Network Analysis</strong></li>
+</ul></li>
+<li>BIGSSS (Bremen, Germany) [02/2020] <sup>3</sup>
+<ul>
+<li><strong>Python for the Social Sciences</strong></li>
+</ul></li>
+<li>POLNET+ (Konstanz, Germany) [05/2019] <sup>3</sup>
+<ul>
+<li><strong>Advanced Social Network Analysis: Network Models of Culture
+and Discourse</strong></li>
+</ul></li>
+<li>CvO UOL (Oldenburg/Germany) [04-07/2019] <sup>2</sup>
+<ul>
+<li><strong>Introduction to Digital Trace Data in Social
+Science</strong></li>
+</ul></li>
+<li>CvO UOL (Oldenburg/Germany) [10/2018 – 02/2019] <sup>2</sup>
+<ul>
+<li><strong>Big Data and Machine Learning in Social Sciences with
+Python</strong></li>
+</ul></li>
+<li>BIGSSS (Bremen, Germany) [07-08/2018] <sup>1</sup>
+<ul>
+<li><strong>Computational Social Science</strong></li>
+</ul></li>
+<li>CvO UOL (Oldenburg/Germany) [04-07/2018] <sup>2</sup>
+<ul>
+<li><strong>Introduction to Social Network Analysis with R</strong></li>
+</ul></li>
+<li>3GO Graduate School of CvO UOL (Oldenburg/Germany) [01/2018]
+<sup>3</sup>
+<ul>
+<li><strong>Network Modeling with Psychological and Attitudinal
+Data</strong></li>
+</ul></li>
+<li>ECPR (Budapest, Hungary) [07/2017] <sup>1</sup>
+<ul>
+<li><strong>Introduction to Exploratory Network Analysis</strong></li>
+<li><strong>Multilevel Structural Equation Modelling</strong></li>
+<li><strong>Advanced Structural Equation Modelling</strong></li>
+</ul></li>
+<li>ECPR (Bamberg, Germany) [03/2017] <sup>1</sup>
+<ul>
+<li><strong>Tools for the Analysis of Complex Social Systems: An
+Introduction</strong></li>
+<li><strong>Multilevel Regression Modelling</strong></li>
+</ul></li>
+<li>ECPR (Bamberg, Germany) [03/2017] <sup>1</sup>
+<ul>
+<li><strong>Structural Equation Modeling (SEM) with R</strong></li>
+</ul></li>
+<li>BIGSSS (Bremen, Germany) [05 &amp; 11/ 2015] <sup>3</sup>
+<ul>
+<li><strong>Introduction to Structural Equation Modelling</strong></li>
+</ul></li>
+<li>ECPR (Ljubljana, Slovenia) [08/2013] <sup>1</sup>
+<ul>
+<li><strong>Multiple Regression Analysis I: Estimation and
+Diagnostics</strong></li>
+<li><strong>Multiple Regression Analysis II: The Link
+Function</strong></li>
+</ul></li>
+<li>ECPR (Vienna, Austria) [02/2013] <sup>1</sup>
+<ul>
+<li><strong>Introduction to Statistics</strong></li>
+</ul></li>
+</ul>
+<p><sup>1</sup>Summer/Winter School; <sup>2</sup>Graduate-level seminar;
+<sup>3</sup>Workshop <sup>4</sup>Online-Training</p>
+</div>
 
 
 
@@ -382,7 +469,7 @@ $(document).ready(function () {
 
 $(document).ready(function () {
   $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
+    $(this).parent().toggleClass('nav-tabs-open');
   });
 });
 </script>

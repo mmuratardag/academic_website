@@ -69,5 +69,5 @@ icons::fontawesome$brands$github
 <div>
 GDPR & LEGAL DISCLAIMER
 <br>
-The new General Data Protection Regulation (GDPR), May 25 2018, requires a data transparency statement. This site is made with R Markdown and hosted on GitHub. I do not set any cookies, I do not track any visitors, I do not collect any type of data. Read [this](https://docs.github.com/en/github/site-policy/github-terms-of-service){target="_blank"} to have an idea about what GitHub's ToS are. 
+The new General Data Protection Regulation (GDPR), May 25 2018, requires a data transparency statement. This site is made with R Markdown and hosted on GitHub. Read [this](https://docs.github.com/en/github/site-policy/github-terms-of-service){target="_blank"} to have an idea about what GitHub's ToS are. I use no plugins or back-end software to collect visitor data.
 </div>

@@ -13,7 +13,7 @@
 
 <title>MMA, Ph.D., Publications</title>
 
-<script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.19/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/spacelab.min.css" rel="stylesheet" />
@@ -50,6 +50,7 @@
 
 
 
+
 <style type = "text/css">
 .main-container {
   max-width: 940px;
@@ -70,6 +71,9 @@ button.code-folding-btn:focus {
 }
 summary {
   display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
 }
 pre code {
   padding: 0;
@@ -127,11 +131,15 @@ $(document).ready(function () {
     href = "index.html";
   var menuAnchor = $('a[href="' + href + '"]');
 
-  // mark it active
-  menuAnchor.tab('show');
-
-  // if it's got a parent navbar menu mark it active as well
-  menuAnchor.closest('li.dropdown').addClass('active');
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
 
   // Navbar adjustments
   var navHeight = $(".navbar").first().height() + 15;
@@ -160,8 +168,8 @@ $(document).ready(function () {
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before {
-  content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -169,16 +177,9 @@ $(document).ready(function () {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "&#xe258;";
-  border: none;
-}
-
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "";
+  content: "\e258";
   font-family: 'Glyphicons Halflings';
-  display: inline-block;
-  padding: 10px;
-  border-right: 1px solid #ddd;
+  border: none;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -222,7 +223,7 @@ $(document).ready(function () {
 <div class="navbar navbar-default  navbar-fixed-top" role="navigation">
   <div class="container">
     <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
@@ -245,9 +246,6 @@ $(document).ready(function () {
 </li>
 <li>
   <a href="teaching.html">Teaching</a>
-</li>
-<li>
-  <a href="about.html">About</a>
 </li>
 <li>
   <a href="https://mmuratardag.github.io">Data Scientist Website</a>
@@ -276,30 +274,98 @@ $(document).ready(function () {
 </div>
 
 
-<p><br> <img src="ws_img/journal.png" style="width:15%; margin-right: 0px" align="left"> <br> <br> <br> <br> <br> <br> <br></p>
+<p><br>
+<img src="ws_img/journal.png" style="width:15%; margin-right: 0px" align="left">
+<br> <br> <br> <br> <br> <br> <br></p>
 <ul>
 <li><strong>Articles in Refereed Journals</strong>
 <ul>
-<li>Öney, B., Ardag, M.M. (2021 (<em>early view</em>)) Two stories with one happy ending. What constitutes the political culture differences between Egypt and Tunisia during and after the Uprisings? <em>Democratization</em> <a href="https://doi.org/10.1080/13510347.2021.2013823" target="_blank">https://doi.org/10.1080/13510347.2021.2013823</a> <a href="https://osf.io/a4e7n/" target="_blank"><font size="1"><strong>Replication Material</strong></font></a></li>
-<li>Mole, R.C., Golec de Zavala, A., Ardag, M.M. (2021 (<em>early view</em>)) Homophobia and national collective narcissism in populist Poland <em>European Journal of Sociology</em> <a href="https://doi.org/10.1017/S0003975621000072" target="_blank">https://doi.org/10.1017/S0003975621000072</a> <a href="https://osf.io/p5xjy/" target="_blank"><font size="1"><strong>Replication Material</strong></font></a></li>
-<li>Öney, B., Ardag, M.M. (2021 (<em>on-line first</em>)) The Relationship between Diffuse Support for Democracy and Governing Party Support in a Hybrid Regime: Evidence with Four Representative Samples from Turkey <em>Turkish Studies</em> <a href="https://doi.org/10.1080/14683849.2021.1894137" target="_blank">https://doi.org/10.1080/14683849.2021.1894137</a> <a href="https://osf.io/fg35n/" target="_blank"><font size="1"><strong>Replication Material</strong></font></a></li>
-<li>Ardag, M.M., Thomeczek, J.P. (2021). How many different types of populists are there in Germany? An experimental approach with multiple methods, <em>Journal of Theoretical Social Psychology</em> <a href="https://doi.org/10.1002/jts5.70" target="_blank">https://doi.org/10.1002/jts5.70</a> <a href="https://osf.io/v95ut/" target="_blank"><font size="1"><strong>Replication Material</strong></font></a></li>
-<li>Ponizovskiy, V., Ardag, M.M., Grigoryan, L., Boyd, R., Dobewall, H. &amp; Holtz P. (2020) Development and validation of the Personal Values Dictionary: A theory-driven tool for investigating references to basic human values in text <em>European Journal Of Personality</em> 34(5), 885–902 <a href="https://doi.org/10.1002/per.2294" target="_blank">https://doi.org/10.1002/per.2294</a> <a href="https://osf.io/vt8nf/" target="_blank"><font size="1"><strong>Replication Material</strong></font></a></li>
-<li>Ardag, M.M., Castanho Silva, B., Thomeczek, J.P., Bandlow-Raffalski, S.F. &amp; Littvay, L. (2020). Populist Attitudes and Political Engagement: Ugly, Bad, and Sometimes Good? <em>Representation</em> 56(3) 307-330. <a href="https://doi.org/10.1080/00344893.2019.1661870" target="_blank">https://doi.org/10.1080/00344893.2019.1661870</a> <a href="https://osf.io/g8d53/" target="_blank"><font size="1"><strong>Replication Material</strong></font></a></li>
-<li>Wuthrich, F.M. and Ardag, M.M. and Ugur, D. (2012). Politics, Cultural Heterogeneity and Support for the European Union in Turkey, <em>Southeast European and Black Sea Studies</em> 12(1), 45-62. <a href="http://dx.doi.org/10.1080/14683857.2012.661221" target="_blank">http://dx.doi.org/10.1080/14683857.2012.661221</a></li>
+<li>Öney, B., Ardag, M.M. (2021 (<em>early view</em>)) Two stories with
+one happy ending. What constitutes the political culture differences
+between Egypt and Tunisia during and after the Uprisings?
+<em>Democratization</em> <a
+href="https://doi.org/10.1080/13510347.2021.2013823"
+target="_blank">https://doi.org/10.1080/13510347.2021.2013823</a> <a
+href="https://osf.io/a4e7n/"
+target="_blank"><font size="1"><strong>Replication
+Material</strong></font></a></li>
+<li>Mole, R.C., Golec de Zavala, A., Ardag, M.M. (2021 (<em>early
+view</em>)) Homophobia and national collective narcissism in populist
+Poland <em>European Journal of Sociology</em> <a
+href="https://doi.org/10.1017/S0003975621000072"
+target="_blank">https://doi.org/10.1017/S0003975621000072</a> <a
+href="https://osf.io/p5xjy/"
+target="_blank"><font size="1"><strong>Replication
+Material</strong></font></a></li>
+<li>Öney, B., Ardag, M.M. (2021 (<em>on-line first</em>)) The
+Relationship between Diffuse Support for Democracy and Governing Party
+Support in a Hybrid Regime: Evidence with Four Representative Samples
+from Turkey <em>Turkish Studies</em> <a
+href="https://doi.org/10.1080/14683849.2021.1894137"
+target="_blank">https://doi.org/10.1080/14683849.2021.1894137</a> <a
+href="https://osf.io/fg35n/"
+target="_blank"><font size="1"><strong>Replication
+Material</strong></font></a></li>
+<li>Ardag, M.M., Thomeczek, J.P. (2021). How many different types of
+populists are there in Germany? An experimental approach with multiple
+methods, <em>Journal of Theoretical Social Psychology</em> <a
+href="https://doi.org/10.1002/jts5.70"
+target="_blank">https://doi.org/10.1002/jts5.70</a> <a
+href="https://osf.io/v95ut/"
+target="_blank"><font size="1"><strong>Replication
+Material</strong></font></a></li>
+<li>Ponizovskiy, V., Ardag, M.M., Grigoryan, L., Boyd, R., Dobewall, H.
+&amp; Holtz P. (2020) Development and validation of the Personal Values
+Dictionary: A theory-driven tool for investigating references to basic
+human values in text <em>European Journal Of Personality</em> 34(5),
+885–902 <a href="https://doi.org/10.1002/per.2294"
+target="_blank">https://doi.org/10.1002/per.2294</a> <a
+href="https://osf.io/vt8nf/"
+target="_blank"><font size="1"><strong>Replication
+Material</strong></font></a></li>
+<li>Ardag, M.M., Castanho Silva, B., Thomeczek, J.P., Bandlow-Raffalski,
+S.F. &amp; Littvay, L. (2020). Populist Attitudes and Political
+Engagement: Ugly, Bad, and Sometimes Good? <em>Representation</em> 56(3)
+307-330. <a href="https://doi.org/10.1080/00344893.2019.1661870"
+target="_blank">https://doi.org/10.1080/00344893.2019.1661870</a> <a
+href="https://osf.io/g8d53/"
+target="_blank"><font size="1"><strong>Replication
+Material</strong></font></a></li>
+<li>Wuthrich, F.M. and Ardag, M.M. and Ugur, D. (2012). Politics,
+Cultural Heterogeneity and Support for the European Union in Turkey,
+<em>Southeast European and Black Sea Studies</em> 12(1), 45-62. <a
+href="http://dx.doi.org/10.1080/14683857.2012.661221"
+target="_blank">http://dx.doi.org/10.1080/14683857.2012.661221</a></li>
 </ul></li>
 <li><strong>Non Peer-Reviewed Articles</strong>
 <ul>
-<li>Ardag, M.M., Cohrs, J.C. &amp; Selck, T.J. (2019) A Multi-Method Approach to National Identity: From Individual Level Attachment to National Attachment <a href="http://dx.doi.org/10.2139/ssrn.3321204" class="uri">http://dx.doi.org/10.2139/ssrn.3321204</a> <br /><font size="1">FROM THE DOCTORAL DISSERTATION</font></li>
-<li>Ardag, M. M., Cohrs, J.C. &amp; Selck, T.J. (2017) Short Report on the European Union, Refugees and National Identity in Germany <a href="https://doi.org/10.13140/rg.2.2.17105.12649" class="uri">https://doi.org/10.13140/rg.2.2.17105.12649</a></li>
+<li>Ardag, M.M., Cohrs, J.C. &amp; Selck, T.J. (2019) A Multi-Method
+Approach to National Identity: From Individual Level Attachment to
+National Attachment <a href="http://dx.doi.org/10.2139/ssrn.3321204"
+class="uri">http://dx.doi.org/10.2139/ssrn.3321204</a>
+<br /><font size="1">FROM THE DOCTORAL DISSERTATION</font></li>
+<li>Ardag, M. M., Cohrs, J.C. &amp; Selck, T.J. (2017) Short Report on
+the European Union, Refugees and National Identity in Germany <a
+href="https://doi.org/10.13140/rg.2.2.17105.12649"
+class="uri">https://doi.org/10.13140/rg.2.2.17105.12649</a></li>
 </ul></li>
 <li><strong>Ph.D. Dissertation</strong>
 <ul>
-<li>Ardag, M.M. (2018). <em><a href="http://oops.uni-oldenburg.de/3635/" target="_blank">National Identity: Conceptualization and Measurement, Antecedents and Consequences - An Exploration of the Sources of Heterogeneity.</a></em> CvO University of Oldenburg, Oldenburg. Retrieved from <a href="http://oops.uni-oldenburg.de/3635/" target="_blank">http://oops.uni-oldenburg.de/3635/</a></li>
+<li>Ardag, M.M. (2018). <em><a href="http://oops.uni-oldenburg.de/3635/"
+target="_blank">National Identity: Conceptualization and Measurement,
+Antecedents and Consequences - An Exploration of the Sources of
+Heterogeneity.</a></em> CvO University of Oldenburg, Oldenburg.
+Retrieved from <a href="http://oops.uni-oldenburg.de/3635/"
+target="_blank">http://oops.uni-oldenburg.de/3635/</a></li>
 </ul></li>
-<li><strong>Work in Progress (including conference papers; excluding articles under review)</strong>
+<li><strong>Work in Progress (including conference papers; excluding
+articles under review)</strong>
 <ul>
-<li>Schachner, M., Ardag, M.M., Holtz, P., Grosser, J., Hartz, C., Boehnke, K., Dobewall, H. (2020) Development and validation of the Organizational Culture and Practices Dictionary (OCPD) – Analyses complete; writing in progress <br /><font size="1">ABSTRACT ACCEPTED TO IACCP ANNUAL MEETING 2020 (POSTPONED TO 2021)</font></li>
+<li>Schachner, M., Ardag, M.M., Holtz, P., Grosser, J., Hartz, C.,
+Boehnke, K., Dobewall, H. (2020) Development and validation of the
+Organizational Culture and Practices Dictionary (OCPD) – Analyses
+complete; writing in progress <br /><font size="1">ABSTRACT ACCEPTED TO
+IACCP ANNUAL MEETING 2020 (POSTPONED TO 2021)</font></li>
 </ul></li>
 </ul>
 

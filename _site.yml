@@ -13,8 +13,6 @@ navbar:
       href: publications.html
     - text: "Teaching"
       href: teaching.html
-    - text: "About"
-      href: about.html
     - text: "Data Scientist Website"
       href: https://mmuratardag.github.io
     - text: "Blog"
