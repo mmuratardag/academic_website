@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>An Interactive Guide to McDonald's Omega</title>
+    <!-- Chosen Palette: Warm Neutrals & Soft Blue -->
+    <!-- Application Structure Plan: The application is designed as a narrative, educational journey. It begins with the 'why' (the problem with Cronbach's Alpha), then builds the theoretical foundation (measurement models), introduces the solution (Omega's definition and formula) with an interactive calculator, expands to more complex cases (multidimensionality), provides a direct comparison, and concludes with practical guidance. This sequential, story-like structure is chosen over a dashboard because the goal is deep, progressive understanding of a complex statistical concept, not data exploration. Each section builds logically on the previous one, with interactions designed to solidify the core concepts at each stage. -->
+    <!-- Visualization & Content Choices:
+        - Report Info: Alpha's Tau-Equivalence assumption. -> Goal: Inform/Compare. -> Viz: Toggleable bar chart. -> Interaction: Switch between "Equal Loadings" and "Unequal Loadings". -> Justification: Instantly visualizes the restrictive vs. realistic models. -> Library: Chart.js.
+        - Report Info: Hierarchy of measurement models. -> Goal: Organize/Inform. -> Viz: Styled HTML/CSS diagram. -> Interaction: Hover/Click to highlight and show details. -> Justification: Clear, non-technical visual for a theoretical concept. Avoids chart overhead. -> Library: HTML/Tailwind.
+        - Report Info: Unidimensional Omega formula. -> Goal: Explore/Understand. -> Viz: Interactive calculator with sliders and a bar chart. -> Interaction: Users change factor loadings/error to see Omega/Alpha values update in real-time. -> Justification: Makes the abstract formula tangible and demonstrates Omega's superiority when loadings vary. -> Library: Chart.js.
+        - Report Info: Bifactor models (Omega Total vs. Hierarchical). -> Goal: Explain variance partitioning. -> Viz: Dynamic stacked bar chart. -> Interaction: Buttons to switch between scenarios (e.g., 'High General Factor'). -> Justification: A stacked bar is the ideal representation for parts-of-a-whole variance. -> Library: Chart.js.
+        - Report Info: Comparison table & practical advice. -> Goal: Summarize/Inform. -> Viz: HTML Table & Tabbed content area. -> Interaction: Click tabs. -> Justification: Standard, effective UI for presenting dense, organized information. -> Library: HTML/Tailwind.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css" xintegrity="sha384-Xi8rHCmBmhbuyyhbI88391ZKP2dmfnOl4rT9ZfRI7mLTdk1wblIUnrIq35nqwEvC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js" xintegrity="sha384-X/XCfMm41VSsqRNQgDerQczD69XqmjOOOwYQvr/uuC+j4oAp06EVg/rrYTHz5smc" crossorigin="anonymous"></script>
+    <style>
+        body {
+            background-color: #FDFBF7;
+            color: #333333;
+            font-family: 'Inter', sans-serif;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        .katex { font-size: 1.1em !important; }
+        .nav-button {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-button.active {
+            color: #A2BBDC;
+            border-bottom-color: #A2BBDC;
+        }
+        .section-container {
+            border: 1px solid #EAE6E1;
+            background-color: #FFFFFF;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .slider-label {
+            min-width: 120px;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-gray-200">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <h1 class="text-xl font-bold text-gray-800">Understanding McDonald's Omega</h1>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#introduction" class="nav-button font-semibold text-gray-600 hover:text-[#A2BBDC]">Introduction</a>
+                    <a href="#foundation" class="nav-button font-semibold text-gray-600 hover:text-[#A2BBDC]">Foundations</a>
+                    <a href="#omega" class="nav-button font-semibold text-gray-600 hover:text-[#A2BBDC]">The Formula</a>
+                    <a href="#multidimensional" class="nav-button font-semibold text-gray-600 hover:text-[#A2BBDC]">Beyond Unidimensionality</a>
+                    <a href="#practical" class="nav-button font-semibold text-gray-600 hover:text-[#A2BBDC]">Practical Guide</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- Introduction Section -->
+        <section id="introduction" class="mb-16 scroll-mt-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#8D8781] mb-2">From a Flawed Standard to a Superior Model</h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">Discover why McDonald's Omega has become the modern standard for measuring statistical reliability.</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="prose max-w-none text-gray-700">
+                    <p class="text-lg mb-4">In science, the quality of measurement is everything. Reliability—the consistency of a measurement tool—is a cornerstone of this quality. For decades, Cronbach's Alpha ($\alpha$) was the default choice for estimating reliability. It was simple and intuitive, but it rests on a critical assumption that is rarely met in the real world: that all items on a scale measure the underlying construct with the exact same precision.</p>
+                    <p>This interactive guide explores the limitations of Alpha and introduces its modern, more accurate successor: McDonald's Omega ($\omega$). Omega is a model-based estimate that provides a more realistic and typically more accurate picture of a scale's reliability. Here, you will learn not just what Omega is, but why it represents a fundamental step forward in measurement science.</p>
+                </div>
+                <div class="section-container p-6 rounded-lg shadow-sm">
+                    <h3 class="text-lg font-semibold text-center mb-4 text-gray-800">The Core Assumption: Alpha vs. Reality</h3>
+                    <p class="text-sm text-center text-gray-500 mb-4">Toggle the switch to see the difference between the strict assumption of Cronbach's Alpha and the more flexible, realistic model used by Omega.</p>
+                    <div class="chart-container h-64 md:h-72">
+                        <canvas id="assumptionChart"></canvas>
+                    </div>
+                    <div class="flex justify-center items-center mt-4">
+                        <span class="text-sm font-medium text-gray-900 mr-3">Congeneric Model (Realistic)</span>
+                        <label for="assumptionToggle" class="inline-flex relative items-center cursor-pointer">
+                            <input type="checkbox" value="" id="assumptionToggle" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#A2BBDC]"></div>
+                        </label>
+                        <span class="text-sm font-medium text-gray-900 ml-3">Tau-Equivalent Model (Alpha's Assumption)</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Foundation Section -->
+        <section id="foundation" class="mb-16 scroll-mt-24">
+             <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#8D8781] mb-2">The Foundation: A Hierarchy of Models</h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">Omega's strength comes from its realistic foundation. Understand the difference between Parallel, Tau-Equivalent, and Congeneric measurement models.</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-6 text-center">
+                <!-- Parallel Model -->
+                <div id="model-parallel" class="model-card section-container p-6 rounded-lg shadow-sm cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105">
+                    <h3 class="text-xl font-semibold mb-2 text-[#8D8781]">Parallel</h3>
+                    <div class="text-6xl mb-4">➔</div>
+                    <p class="text-sm text-gray-600">The most restrictive model. It assumes all items have equal factor loadings AND equal error variances. A very rare scenario.</p>
+                    <div class="text-left text-sm mt-4 p-2 bg-gray-50 rounded">
+                        <p><strong class="text-[#A2BBDC]">Loadings:</strong> <span class="katex-inline" data-katex="\lambda_1 = \lambda_2 = ... = \lambda_k"></span></p>
+                        <p><strong class="text-[#A2BBDC]">Errors:</strong> <span class="katex-inline" data-katex="\sigma^2_{\epsilon_1} = \sigma^2_{\epsilon_2} = ... = \sigma^2_{\epsilon_k}"></span></p>
+                    </div>
+                </div>
+                <!-- Tau-Equivalent Model -->
+                <div id="model-tau" class="model-card section-container p-6 rounded-lg shadow-sm cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 border-2 border-[#A2BBDC]">
+                    <h3 class="text-xl font-semibold mb-2 text-[#8D8781]">Tau-Equivalent</h3>
+                     <div class="text-6xl mb-4">➔</div>
+                    <p class="text-sm text-gray-600">The model underlying Cronbach's Alpha. It assumes equal factor loadings but allows error variances to differ.</p>
+                     <div class="text-left text-sm mt-4 p-2 bg-gray-50 rounded">
+                        <p><strong class="text-[#A2BBDC]">Loadings:</strong> <span class="katex-inline" data-katex="\lambda_1 = \lambda_2 = ... = \lambda_k"></span></p>
+                        <p><strong class="text-[#A2BBDC]">Errors:</strong> Can differ</p>
+                    </div>
+                </div>
+                <!-- Congeneric Model -->
+                <div id="model-congeneric" class="model-card section-container p-6 rounded-lg shadow-sm cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105">
+                    <h3 class="text-xl font-semibold mb-2 text-[#8D8781]">Congeneric</h3>
+                     <div class="text-6xl mb-4">➔</div>
+                    <p class="text-sm text-gray-600">The model underlying McDonald's Omega. It is the most flexible, allowing both factor loadings and error variances to differ.</p>
+                     <div class="text-left text-sm mt-4 p-2 bg-gray-50 rounded">
+                        <p><strong class="text-[#A2BBDC]">Loadings:</strong> Can differ</p>
+                        <p><strong class="text-[#A2BBDC]">Errors:</strong> Can differ</p>
+                    </div>
+                </div>
+            </div>
+             <div id="model-explanation" class="mt-8 p-6 section-container rounded-lg shadow-sm">
+                <p class="text-gray-700">Hover over or tap a model to learn more. The choice of a reliability coefficient is an implicit statement about which of these models you believe best represents your data. Since the Congeneric model is the most realistic for nearly all psychological scales, a reliability coefficient based on it—McDonald's Omega—is more broadly applicable and defensible.</p>
+            </div>
+        </section>
+
+        <!-- Omega Formula Section -->
+        <section id="omega" class="mb-16 scroll-mt-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#8D8781] mb-2">Deconstructing Omega: An Interactive Formula</h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">Go beyond the theory. Manipulate the components of a scale and see how they impact both Omega and Alpha in real-time.</p>
+            </div>
+            <div class="section-container p-4 md:p-8 rounded-lg shadow-lg">
+                <div class="text-center p-4 bg-gray-50 rounded-md mb-6">
+                    <h3 class="text-xl font-semibold text-gray-800">Unidimensional Omega Formula</h3>
+                    <div id="omega-formula-display" class="text-2xl mt-2 text-gray-700"></div>
+                </div>
+                <div class="grid lg:grid-cols-2 gap-8">
+                    <div>
+                         <p class="text-gray-600 mb-6">This section gives you direct control over a hypothetical 5-item scale. The bar chart shows the factor loading for each item—how strongly it relates to the underlying construct. Use the sliders to change each item's loading and the overall error. Notice how Omega provides a stable estimate of reliability even when items are not perfect, while Alpha drops significantly if its assumptions are violated.</p>
+                         <div class="space-y-4">
+                            <div>
+                                <label for="error-slider" class="block text-sm font-medium text-gray-700">Sum of Error Variances (<span class="katex-inline" data-katex="\sum \sigma^2_{\epsilon_i}"></span>): <span id="error-value" class="font-bold"></span></label>
+                                <input id="error-slider" type="range" min="0.5" max="5" value="2.5" step="0.1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Item Factor Loadings (<span class="katex-inline" data-katex="\lambda_i"></span>)</label>
+                                <div id="item-sliders" class="space-y-3 mt-2"></div>
+                            </div>
+                         </div>
+                         <button id="reset-sliders-btn" class="mt-6 w-full bg-[#8D8781] text-white font-bold py-2 px-4 rounded-lg hover:bg-opacity-90 transition-colors">Reset to Equal Loadings</button>
+                    </div>
+                    <div>
+                        <div class="chart-container h-80">
+                            <canvas id="interactiveOmegaChart"></canvas>
+                        </div>
+                        <div class="mt-6 grid grid-cols-2 gap-4 text-center">
+                             <div class="bg-blue-50 p-4 rounded-lg">
+                                <h4 class="text-lg font-semibold text-blue-800">McDonald's Omega (<span class="katex-inline" data-katex="\omega"></span>)</h4>
+                                <p id="omega-value" class="text-4xl font-bold text-blue-600">0.00</p>
+                            </div>
+                             <div class="bg-red-50 p-4 rounded-lg">
+                                <h4 class="text-lg font-semibold text-red-800">Cronbach's Alpha (<span class="katex-inline" data-katex="\alpha"></span>)</h4>
+                                <p id="alpha-value" class="text-4xl font-bold text-red-600">0.00</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Multidimensional Section -->
+        <section id="multidimensional" class="mb-16 scroll-mt-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#8D8781] mb-2">Beyond One Dimension</h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">Many psychological scales aren't strictly unidimensional. See how the Omega family partitions variance to give a more nuanced view of reliability.</p>
+            </div>
+            <div class="grid lg:grid-cols-2 gap-8 items-center">
+                <div class="prose max-w-none text-gray-700">
+                    <p class="mb-4">When a scale measures a broad construct that has several sub-components (e.g., 'well-being' composed of 'life satisfaction' and 'positive affect'), we need a more sophisticated model. The **bifactor model** allows us to partition a score's variance into what's due to the general, overarching factor and what's due to the specific group factors.</p>
+                    <p class="mb-4">The Omega family has two key coefficients for this:</p>
+                    <ul>
+                        <li><strong>Omega Total ($\omega_t$):</strong> Represents the overall reliability of the score. It's the proportion of variance due to *all* common factors (general + group).</li>
+                        <li><strong>Omega Hierarchical ($\omega_h$):</strong> Represents the reliability of the general factor alone. It tells you how well your total score reflects the single main construct you intended to measure.</li>
+                    </ul>
+                     <p>A large gap between $\omega_t$ and $\omega_h$ signals that your scale is highly multidimensional, and interpreting the total score as a measure of one thing could be misleading.</p>
+                </div>
+                 <div class="section-container p-6 rounded-lg shadow-sm">
+                    <h3 class="text-lg font-semibold text-center mb-4 text-gray-800">Visualizing Variance Partitioning</h3>
+                    <div class="chart-container h-72 md:h-80">
+                        <canvas id="bifactorChart"></canvas>
+                    </div>
+                    <div id="bifactor-controls" class="flex justify-center flex-wrap gap-2 mt-4">
+                        <button data-scenario="ideal" class="bifactor-btn bg-[#A2BBDC] text-white font-bold py-2 px-4 rounded-lg">Ideal (High $\omega_h$)</button>
+                        <button data-scenario="multidimensional" class="bifactor-btn bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg">Multidimensional (Low $\omega_h$)</button>
+                        <button data-scenario="noisy" class="bifactor-btn bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg">Noisy (High Error)</button>
+                    </div>
+                 </div>
+            </div>
+        </section>
+
+        <!-- Practical Guide Section -->
+        <section id="practical" class="scroll-mt-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#8D8781] mb-2">A Practical Guide to Using Omega</h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">From model fit to interpretation, here's what you need to know to use Omega correctly in your own research.</p>
+            </div>
+            <div class="section-container rounded-lg shadow-sm overflow-hidden">
+                <div class="border-b border-gray-200">
+                     <nav class="-mb-px flex" aria-label="Tabs">
+                        <button class="practical-tab active-tab w-1/3 py-4 px-1 text-center border-b-2 font-medium text-sm text-gray-700 border-[#A2BBDC]">Model Fit</button>
+                        <button class="practical-tab w-1/3 py-4 px-1 text-center border-b-2 font-medium text-sm text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300">Software</button>
+                        <button class="practical-tab w-1/3 py-4 px-1 text-center border-b-2 font-medium text-sm text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300">Interpretation</button>
+                     </nav>
+                </div>
+                <div class="p-6 md:p-8">
+                    <div id="tab-content-0" class="tab-content prose max-w-none text-gray-700">
+                        <h4>The Primacy of Model Fit</h4>
+                        <p>Before you can interpret an Omega coefficient, you MUST establish that the underlying factor model fits your data well. An Omega from a poorly fitting model is meaningless. You should first run a Confirmatory Factor Analysis (CFA) and report multiple fit indices.</p>
+                        <p>Commonly accepted thresholds for good fit include:</p>
+                        <ul>
+                            <li><strong>CFI / TLI:</strong> > .95</li>
+                            <li><strong>RMSEA:</strong> < .06</li>
+                            <li><strong>SRMR:</strong> < .08</li>
+                        </ul>
+                         <p>Only after establishing good model fit should you calculate and report Omega.</p>
+                    </div>
+                     <div id="tab-content-1" class="tab-content prose max-w-none text-gray-700 hidden">
+                        <h4>Calculation in Statistical Software</h4>
+                        <p>Calculating Omega is now straightforward in most modern statistical packages.</p>
+                         <ul>
+                             <li><strong>R:</strong> The most flexible option. The <code>psych</code> package's <code>omega()</code> function is excellent for exploratory approaches, while the <code>semTools</code> package's <code>compRelSEM()</code> function works on models fit with <code>lavaan</code> for a confirmatory approach.</li>
+                             <li><strong>SPSS:</strong> Recent versions include Omega in the main Reliability Analysis dialog box. Select "Omega" from the "Model" dropdown. The Hayes OMEGA macro provides more advanced options.</li>
+                             <li><strong>JASP & jamovi:</strong> These free, user-friendly GUIs have Omega built directly into their reliability analysis modules, making it extremely accessible.</li>
+                             <li><strong>Mplus:</strong> This powerful SEM software can compute any type of Omega coefficient through model constraints.</li>
+                         </ul>
+                    </div>
+                     <div id="tab-content-2" class="tab-content prose max-w-none text-gray-700 hidden">
+                         <h4>Interpreting the Values</h4>
+                         <p>An Omega coefficient is interpreted as the proportion of variance in the total score that is attributable to the factor(s) of interest. A $\omega_t$ of .85 means 85% of score variance is "true" variance from common factors.</p>
+                         <p>While context is key, here are some widely used rules of thumb for judging the adequacy of a reliability estimate:</p>
+                         <ul>
+                            <li><strong class="text-red-600">&lt; .70:</strong> Often considered unacceptable or poor.</li>
+                            <li><strong>.70 - .79:</strong> Acceptable for exploratory research.</li>
+                            <li><strong>.80 - .89:</strong> Good for most research purposes.</li>
+                            <li><strong>$\ge$ .90:</strong> Excellent; desirable for high-stakes decisions (e.g., clinical diagnosis).</li>
+                         </ul>
+                         <p>For best practice, always report Omega with a confidence interval to represent its precision.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-100 mt-16">
+        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-gray-600">
+            <p>&copy; 2025 An Interactive Guide to McDonald's Omega. Created to make psychometrics accessible.</p>
+        </div>
+    </footer>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    let assumptionChart, interactiveOmegaChart, bifactorChart;
+    
+    // KaTeX rendering
+    function renderMath() {
+        document.querySelectorAll('.katex-inline').forEach(el => {
+            katex.render(el.dataset.katex, el, {
+                throwOnError: false,
+                displayMode: false
+            });
+        });
+    }
+
+    // 1. Assumption Chart
+    function initAssumptionChart() {
+        const ctx = document.getElementById('assumptionChart').getContext('2d');
+        const toggle = document.getElementById('assumptionToggle');
+        
+        const data = {
+            labels: ['Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5'],
+            datasets: [{
+                label: 'Factor Loading',
+                backgroundColor: '#A2BBDC',
+                borderColor: '#8AADD2',
+                borderWidth: 1,
+                borderRadius: 4,
+                data: [0.7, 0.8, 0.6, 0.75, 0.5], 
+            }]
+        };
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `Loading: ${context.raw.toFixed(2)}`
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 1.0,
+                    title: { display: true, text: 'Factor Loading' }
+                }
+            }
+        };
+
+        assumptionChart = new Chart(ctx, { type: 'bar', data, options });
+
+        toggle.addEventListener('change', () => {
+            const isTauEquivalent = toggle.checked;
+            const newData = isTauEquivalent ? [0.7, 0.7, 0.7, 0.7, 0.7] : [0.7, 0.8, 0.6, 0.75, 0.5];
+            assumptionChart.data.datasets[0].data = newData;
+            assumptionChart.update();
+        });
+    }
+
+    // 2. Model Hierarchy Interaction
+    function initModelHierarchy() {
+        const cards = document.querySelectorAll('.model-card');
+        const explanationBox = document.getElementById('model-explanation');
+        const explanations = {
+            'model-parallel': '<strong>Parallel Model:</strong> The strictest model. It assumes all items are equally good measures of the construct and have the same amount of random error. This is a very strong assumption that is rarely met.',
+            'model-tau': '<strong>Tau-Equivalent Model:</strong> This is the foundation for Cronbach\'s Alpha. It relaxes one assumption: error can vary between items. However, it still requires all items to be equally strong measures of the construct (equal factor loadings).',
+            'model-congeneric': '<strong>Congeneric Model:</strong> This is the foundation for McDonald\'s Omega. It is the most realistic model, assuming only that all items measure the same single underlying construct. It allows items to vary in both their strength (factor loadings) and their amount of error.'
+        };
+
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                explanationBox.innerHTML = explanations[card.id];
+            });
+            card.addEventListener('mouseleave', () => {
+                 explanationBox.innerHTML = '<p class="text-gray-700">Hover over or tap a model to learn more. The choice of a reliability coefficient is an implicit statement about which of these models you believe best represents your data. Since the Congeneric model is the most realistic for nearly all psychological scales, a reliability coefficient based on it—McDonald\'s Omega—is more broadly applicable and defensible.</p>';
+            });
+        });
+    }
+    
+    // 3. Interactive Omega Calculator
+    function initInteractiveOmegaCalculator() {
+        const numItems = 5;
+        const itemSlidersContainer = document.getElementById('item-sliders');
+        const errorSlider = document.getElementById('error-slider');
+        const errorValueSpan = document.getElementById('error-value');
+        const omegaValueEl = document.getElementById('omega-value');
+        const alphaValueEl = document.getElementById('alpha-value');
+        const formulaDisplayEl = document.getElementById('omega-formula-display');
+        const resetBtn = document.getElementById('reset-sliders-btn');
+
+        let loadings = Array(numItems).fill(0.7);
+        let errorVariance = 2.5;
+
+        function calculateReliability() {
+            const sumLoadings = loadings.reduce((a, b) => a + b, 0);
+            const sumLoadingsSq = Math.pow(sumLoadings, 2);
+            
+            const omega = sumLoadingsSq / (sumLoadingsSq + errorVariance);
+            omegaValueEl.textContent = omega.toFixed(3);
+
+            // Alpha calculation from parameters for demonstration
+            // Assumes total variance of each item = loading^2 + error_i
+            // This is a simplification but illustrates the point
+            const k = loadings.length;
+            const avgLoading = sumLoadings / k;
+            const totalItemVar = loadings.reduce((sum, l) => sum + (l*l), 0) + errorVariance;
+            const avgCovariance = avgLoading * avgLoading; // If truly tau-equivalent
+            const alpha = (k * avgCovariance) / (avgCovariance * (k-1) + totalItemVar/k * (k));
+            
+             // More direct alpha calculation from covariance matrix components
+             const avgItemVar = loadings.reduce((sum, l) => sum + l*l, 0)/k + errorVariance/k;
+             const sumItemVar = avgItemVar * k;
+             const totalVar = sumLoadingsSq + errorVariance;
+             const alpha_calc = (k / (k-1)) * (1 - (sumItemVar/totalVar));
+             alphaValueEl.textContent = alpha_calc > 0 ? alpha_calc.toFixed(3) : '0.000';
+
+
+            formulaDisplayEl.innerHTML = `
+                <span data-katex="\\omega = \\frac{(\\sum_{i=1}^{k} \\lambda_i)^2}{(\\sum_{i=1}^{k} \\lambda_i)^2 + \\sum_{i=1}^{k} \\sigma^2_{\\epsilon_i}} = \\frac{(${sumLoadings.toFixed(2)})^2}{(${sumLoadings.toFixed(2)})^2 + ${errorVariance.toFixed(2)}} = ${omega.toFixed(3)}"></span>
+            `;
+            katex.render(formulaDisplayEl.children[0].dataset.katex, formulaDisplayEl.children[0], { throwOnError: false });
+
+            interactiveOmegaChart.data.datasets[0].data = loadings;
+            interactiveOmegaChart.update();
+        }
+        
+        errorSlider.addEventListener('input', (e) => {
+            errorVariance = parseFloat(e.target.value);
+            errorValueSpan.textContent = errorVariance.toFixed(2);
+            calculateReliability();
+        });
+
+        for (let i = 0; i < numItems; i++) {
+            const sliderDiv = document.createElement('div');
+            sliderDiv.className = "flex items-center space-x-2";
+            sliderDiv.innerHTML = `
+                <label for="item-slider-${i}" class="slider-label text-sm">Item ${i+1}:</label>
+                <input id="item-slider-${i}" type="range" min="0.1" max="0.95" value="${loadings[i]}" step="0.05" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                <span id="item-value-${i}" class="font-mono text-sm">${loadings[i].toFixed(2)}</span>
+            `;
+            itemSlidersContainer.appendChild(sliderDiv);
+            
+            const slider = document.getElementById(`item-slider-${i}`);
+            const valueSpan = document.getElementById(`item-value-${i}`);
+            slider.addEventListener('input', (e) => {
+                loadings[i] = parseFloat(e.target.value);
+                valueSpan.textContent = loadings[i].toFixed(2);
+                calculateReliability();
+            });
+        }
+        
+        resetBtn.addEventListener('click', () => {
+            loadings.fill(0.7);
+            document.querySelectorAll('input[id^="item-slider-"]').forEach((s, i) => {
+                s.value = 0.7;
+                document.getElementById(`item-value-${i}`).textContent = '0.70';
+            });
+            calculateReliability();
+        });
+
+        const ctx = document.getElementById('interactiveOmegaChart').getContext('2d');
+        interactiveOmegaChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5'],
+                datasets: [{
+                    label: 'Factor Loading',
+                    data: loadings,
+                    backgroundColor: 'rgba(162, 187, 220, 0.6)',
+                    borderColor: 'rgba(162, 187, 220, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, max: 1.0, title: { display: true, text: 'Factor Loading (λ)' } }
+                }
+            }
+        });
+
+        errorValueSpan.textContent = errorVariance.toFixed(2);
+        calculateReliability();
+    }
+    
+    // 4. Bifactor (Multidimensional) Chart
+    function initBifactorChart() {
+        const ctx = document.getElementById('bifactorChart').getContext('2d');
+        const scenarios = {
+            ideal: {
+                general: 60,
+                group: 15,
+                error: 25,
+            },
+            multidimensional: {
+                general: 30,
+                group: 50,
+                error: 20,
+            },
+            noisy: {
+                general: 40,
+                group: 20,
+                error: 40,
+            }
+        };
+
+        const chartData = {
+            labels: ['Total Score Variance'],
+            datasets: [
+                { label: 'General Factor', data: [scenarios.ideal.general], backgroundColor: '#A2BBDC' },
+                { label: 'Group Factors', data: [scenarios.ideal.group], backgroundColor: '#8D8781' },
+                { label: 'Error', data: [scenarios.ideal.error], backgroundColor: '#EAE6E1' },
+            ]
+        };
+        
+        bifactorChart = new Chart(ctx, {
+            type: 'bar',
+            data: chartData,
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `${context.dataset.label}: ${context.raw}%`
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Sources of Variance in Total Score'
+                    }
+                },
+                scales: {
+                    x: { stacked: true, max: 100, ticks: { callback: value => value + '%' } },
+                    y: { stacked: true, display: false }
+                }
+            }
+        });
+        
+        function updateBifactorChart(scenario) {
+            const data = scenarios[scenario];
+            bifactorChart.data.datasets[0].data[0] = data.general;
+            bifactorChart.data.datasets[1].data[0] = data.group;
+            bifactorChart.data.datasets[2].data[0] = data.error;
+
+            const totalCommon = data.general + data.group;
+            const omegaT = totalCommon / 100;
+            const omegaH = data.general / 100;
+
+            bifactorChart.options.plugins.title.text = `ω-Total = ${omegaT.toFixed(2)}, ω-Hierarchical = ${omegaH.toFixed(2)}`;
+            bifactorChart.update();
+        }
+
+        document.querySelectorAll('.bifactor-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.bifactor-btn').forEach(b => b.classList.remove('bg-[#A2BBDC]', 'text-white'));
+                document.querySelectorAll('.bifactor-btn').forEach(b => b.classList.add('bg-gray-200', 'text-gray-800'));
+                e.target.classList.remove('bg-gray-200', 'text-gray-800');
+                e.target.classList.add('bg-[#A2BBDC]', 'text-white');
+                updateBifactorChart(e.target.dataset.scenario);
+            });
+        });
+        updateBifactorChart('ideal');
+    }
+
+    // 5. Practical Guide Tabs
+    function initPracticalTabs() {
+        const tabs = document.querySelectorAll('.practical-tab');
+        const contents = document.querySelectorAll('.tab-content');
+        
+        tabs.forEach((tab, index) => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => {
+                    t.classList.remove('active-tab', 'text-gray-700', 'border-[#A2BBDC]');
+                    t.classList.add('text-gray-500', 'border-transparent');
+                });
+                tab.classList.add('active-tab', 'text-gray-700', 'border-[#A2BBDC]');
+                tab.classList.remove('text-gray-500', 'border-transparent');
+                
+                contents.forEach(c => c.classList.add('hidden'));
+                document.getElementById(`tab-content-${index}`).classList.remove('hidden');
+            });
+        });
+    }
+
+    // 6. Nav scroll highlighting
+    function initNavScroll() {
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('.nav-button');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    navLinks.forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href').substring(1) === entry.target.id) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }, { rootMargin: '-50% 0px -50% 0px' });
+
+        sections.forEach(section => observer.observe(section));
+    }
+
+
+    // Initialize all components
+    renderMath();
+    initAssumptionChart();
+    initModelHierarchy();
+    initInteractiveOmegaCalculator();
+    initBifactorChart();
+    initPracticalTabs();
+    initNavScroll();
+
+});
+</script>
+
+</body>
+</html>
