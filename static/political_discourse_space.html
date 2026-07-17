@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Radicalization Warps the Discourse Space</title>
+<style>
+  html,body{margin:0;height:100%;background:#0a0e18;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
+  #stage{position:fixed;inset:0}
+  #ui{position:fixed;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between}
+  .bar{display:flex;gap:8px;align-items:center;padding:12px 14px;flex-wrap:wrap}
+  button{pointer-events:auto;background:rgba(20,28,46,.85);color:#dfe6f0;border:1px solid rgba(255,217,138,.35);
+    border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer;transition:border-color .2s,color .2s}
+  button:hover{border-color:#ffd98a;color:#ffd98a}
+  button.active{background:#ffd98a;color:#101623;border-color:#ffd98a;font-weight:700}
+  #caption{margin:0 auto 16px;max-width:780px;width:calc(100% - 28px);background:rgba(12,17,30,.84);
+    border:1px solid rgba(255,217,138,.28);border-radius:14px;padding:14px 18px 16px;
+    backdrop-filter:blur(6px);box-sizing:border-box}
+  #progress{height:3px;background:rgba(255,255,255,.12);border-radius:2px;overflow:hidden;margin-bottom:10px}
+  #progressFill{height:100%;width:0;background:#ffd98a}
+  #capTitle{color:#ffd98a;font-weight:700;font-size:1.05rem;margin-bottom:6px}
+  #capText{color:#dfe6f0;font-size:.92rem;line-height:1.45}
+  #hint{color:rgba(223,230,240,.45);font-size:.72rem;text-align:center;padding-bottom:8px}
+  #errbox{position:fixed;top:0;left:0;right:0;z-index:99;display:none;background:#7a1f2b;color:#ffe3e3;
+    font-size:.8rem;line-height:1.4;padding:8px 40px 8px 12px;font-family:monospace;word-break:break-word}
+  #errclose{position:absolute;right:8px;top:6px;background:none;border:none;color:#ffe3e3;
+    font-size:1rem;cursor:pointer;padding:0 6px;pointer-events:auto}
+  @media (max-width:640px){
+    #capText{font-size:.8rem}
+    .bar{padding:8px;gap:6px}
+    button{padding:5px 9px;font-size:12px}
+  }
+</style>
+</head>
+<body>
+<div id="errbox"><button id="errclose">&times;</button><span id="errmsg"></span></div>
+<div id="stage"></div>
+<div id="ui">
+  <div class="bar" id="topbar">
+    <button id="btnPlay" title="Play / Pause (P)">&#10074;&#10074;</button>
+    <button id="btnRestart" title="Restart">&#8634;</button>
+    <span style="width:10px"></span>
+  </div>
+  <div>
+    <div id="caption">
+      <div id="progress"><div id="progressFill"></div></div>
+      <div id="capTitle"></div>
+      <div id="capText"></div>
+    </div>
+    <div id="hint">Click / Space &mdash; next act &middot; P &mdash; play/pause &middot; 1&ndash;5 &mdash; jump to act</div>
+  </div>
+</div>
+
+<script>
+/* Diagnostic trap. Kept in its own ES5-only script block so it still runs
+   even if the main script below fails to parse on an older browser. */
+function showErr(msg){
+  var box=document.getElementById('errbox');
+  document.getElementById('errmsg').textContent='Diagnostic: '+msg;
+  box.style.display='block';
+}
+window.addEventListener('error',function(e){
+  showErr((e.message||'unknown error')+(e.lineno?(' [line '+e.lineno+']'):''));
+});
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('errclose').addEventListener('click',function(){
+    document.getElementById('errbox').style.display='none';
+  });
+});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+/* ==================== TUNABLE CONSTANTS ==================== */
+const SIGMA        = 25;    // gaussian falloff of the gravity well (units)
+const W_S3         = 6;     // warp strength reached at the end of Act III
+const W_MAX        = 14;    // final warp strength (Acts IV-V)
+const W_BREAK      = 10;    // warp threshold at which the guardrail breaches
+const S3_RAMP      = 12;    // seconds for warp ramp in Act III
+const S4_RAMP      = 13;    // seconds for warp ramp in Act IV
+const BSW_AMP_X    = 35;    // BSW left-right sweep amplitude (units)
+const BSW_AMP_Y    = 10;    // BSW up-down (depth) sweep amplitude (units)
+const BSW_PERIOD_X = 90;    // seconds per full left-right cycle
+const BSW_PERIOD_Y = 30;    // seconds per full up-down cycle (incommensurate with X for a wandering path)
+const IDLE_AMP     = 2.5;   // idle drift amplitude for mainstream parties (units)
+const DRIFT_ACTOR  = 0.28;  // downhill-slide rate for parties
+const DRIFT_ISSUE  = 0.55;  // downhill-slide rate for issues
+const ACTOR_MIN_D  = 11;    // parties gather at the rim, never into the well core
+const CAPTURE_D    = 7;     // issues inside this distance are fully captured
+const RIM_D        = 6;     // captured issues pinned at this distance from well center
+const SCENE_DUR    = [24,16,18,20,22]; // seconds per act (auto-advance)
+const PLANE        = {hx:50, hy:30};   // half-extents of the 100x60 plane
+const WELL         = {x:42, y:5};      // well center = AfD home position
+const BREACH_GAP   = 4;     // half-width of the guardrail gap (units)
+/* Camera: fixed political orientation. Left of spectrum stays screen-left. */
+const CAM_BASE_ANG    = 0;    // viewing anchor (rad). 0 = camera front-on: -x left, +x right
+const CAM_SWAY_AMP    = 0.10; // max sway around anchor (rad). Set 0 to lock camera entirely
+const CAM_SWAY_PERIOD = 30;   // seconds per full sway cycle
+
+/* ==================== SHARED STATE ==================== */
+const AFD_HEX = 0x7FDBFF, AFD_DARK_HEX = 0x1d4e89, GREY_HEX = 0x9E9E9E, NICHE_HEX = 0xCCCCCC;
+
+/* susc: how strongly a party slides down the well once it responds.
+   wOn:  warp threshold below which the party resists the pull entirely (default 0).
+   SPD has high susceptibility and no resistance, so it slides early and fast
+   despite starting far away. CDU holds its ground until the warp is near full
+   depth (w >= 10, coinciding with the guardrail breach), then follows. */
+const ACTORS = [
+  {name:'Linke', color:0xE91E8C, home:[-40,-8], susc:.30, side:-1},
+  {name:'Grüne', color:0x2ECC40, home:[-25, 8], susc:.40, side:-1},
+  {name:'SPD',   color:0xE3000F, home:[-14,-4], susc:2.6, side:-1},
+  {name:'CDU',   color:0x111111, home:[ 14, 4], susc:0.6, side: 1, outline:true, wOn:10},
+  {name:'FDP',   color:0xFFDC00, home:[ 26,-6], susc:.80, side: 1},
+  {name:'AfD',   color:AFD_HEX,  home:[WELL.x,WELL.y], susc:0, side:1, well:true},
+  {name:'BSW',   color:0x8E44AD, home:[  0,-16], susc:0, side:0, bsw:true},
+];
+ACTORS.forEach((a,i)=>{ a.off=[0,0]; a.pos=[a.home[0],a.home[1]];
+  a.ph=i*1.7; a.fx=0.11+0.013*i; a.fy=0.085+0.011*i; });
+
+const ISSUE_DATA=[
+  ['Climate',-30,12],['Energy crisis',-8,16],['Taxation',18,-14],['Regulation',5,-18],
+  ['Income inequality',-34,-16],['Labor market',2,6],['Unemployment',12,-10],['Immigration',30,12],
+  ['Social welfare',-20,-12],['Science/Education',-30,22],['Public investment',-4,-8],
+  ['Digitalization',8,-24],['Public health',-16,4],['Crime/Violence',33,-12],['Trade',15,22],
+  ['Transatlantic relations',25, 19],['Ongoing wars',0,26]
+];
+const NICHE_DATA=[['Voting rights',-38,4],['Housing crisis',-26,-22],['Remigration',39,-4]];
+const ISSUES=[];
+ISSUE_DATA.forEach(d=>ISSUES.push({name:d[0],base:[d[1],d[2]],pos:[d[1],d[2]],niche:false,captured:false,mix:0}));
+NICHE_DATA.forEach(d=>ISSUES.push({name:d[0],base:[d[1],d[2]],pos:[d[1],d[2]],niche:true, captured:false,mix:0}));
+
+const ROMAN=['I','II','III','IV','V'];
+const CAPTIONS=[
+ {t:'The Discourse Space',
+  x:'Political discourse is an opinion space where issues roam. Parties strategically use this space to compete with each other and appeal to voters. In conventional democratic discourse, parties highlight the issues they own to win votes. The glowing guardrails mark the boundary between democratic conflict and what lies beyond: our social contract.'},
+ {t:'The Polarization Story',
+  x:'The polarization metaphor claims the crisis is symmetric: two camps drifting to opposite poles. Note that it quietly assumes the plane stays flat, and the guardrails are never in question. The only problem is distance.'},
+ {t:'Radicalization Warps the Space',
+  x:'The evidence shows something different in kind. Radical-right parties like the AfD reshape the space itself through norm-breaking, authoritarian, and violent rhetoric fused with threat narratives and conspiracy, they acquire mass. They don\u2019t just move to a farther point; they bend the discourse space around themselves.'},
+ {t:'Gravitational Pull, Not Repulsion',
+  x:'Other parties don\u2019t recoil in equal and opposite fashion, they slide down the well. Their rhetoric drifts closer to the radical party; issues are dragged into its framing and eventually captured. Where the mass presses hardest, the guardrails give way.'},
+ {t:'The Stakes of Misdiagnosis',
+  x:'Call this \u2018polarization,\u2019 and the remedy is civility and meeting in the middle of a plane that no longer has a stable middle. Call it radicalization, and the task changes: confront the actors bending the space, and reinforce the guardrails before the breach becomes permanent.'}
+];
+
+let simTime=0, sceneIdx=0, sceneT=0, playing=true, breached=false, w=0, spread=0, crackPaths=null;
+
+/* ==================== FIELD ==================== */
+const TWO_SIG2 = 2*SIGMA*SIGMA;
+function gauss(x,y){const dx=x-WELL.x,dy=y-WELL.y;return Math.exp(-(dx*dx+dy*dy)/TWO_SIG2);}
+const D={x:0,y:0,z:0};
+function displace(x,y){ // display-time deformation: horizontal convergence + funnel depth
+  const g=gauss(x,y), pull=Math.min(0.6,w*0.04)*g;
+  D.x=(WELL.x-x)*pull; D.y=(WELL.y-y)*pull; D.z=-w*g; return D;
+}
+function breachPoint(){
+  return {x:PLANE.hx-0.5, y:Math.max(-PLANE.hy+4,Math.min(PLANE.hy-4,WELL.y))};
+}
+function camAngle(){ // fixed anchor + bounded sway; never flips left/right
+  return CAM_BASE_ANG + CAM_SWAY_AMP*Math.sin(2*Math.PI*simTime/CAM_SWAY_PERIOD);
+}
+function clamp01(t){return t<0?0:t>1?1:t;}
+function easeInCubic(t){return t*t*t;}
+function easeInOutCubic(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
+
+/* ==================== SIMULATION ==================== */
+function wTarget(){
+  switch(sceneIdx){
+    case 0: case 1: return 0;
+    case 2: return W_S3*easeInCubic(clamp01(sceneT/S3_RAMP));
+    case 3: return W_S3+(W_MAX-W_S3)*easeInOutCubic(clamp01(sceneT/S4_RAMP));
+    default: return W_MAX;
+  }
+}
+function driftStep(dt){
+  for(const a of ACTORS){
+    if(a.susc<=0 || w<(a.wOn||0)) continue; // wOn: party resists until warp passes its threshold
+    const px=a.pos[0],py=a.pos[1];
+    const dx=WELL.x-px,dy=WELL.y-py,d=Math.hypot(dx,dy);
+    if(d<=ACTOR_MIN_D) continue;
+    const fade=Math.min(1,(d-ACTOR_MIN_D)/6);
+    const s=w*gauss(px,py)*DRIFT_ACTOR*a.susc*fade*dt/d;
+    a.off[0]+=dx*s; a.off[1]+=dy*s;
+  }
+  for(const it of ISSUES){
+    if(it.captured) continue;
+    const dx=WELL.x-it.pos[0],dy=WELL.y-it.pos[1],d=Math.hypot(dx,dy);
+    const g=gauss(it.pos[0],it.pos[1]);
+    it.mix=Math.max(it.mix,Math.min(1,g*(w/W_MAX)*1.8));
+    if(d<CAPTURE_D){
+      it.captured=true; it.mix=1;
+      const k=RIM_D/Math.max(d,.001);
+      it.pos[0]=WELL.x-dx*k; it.pos[1]=WELL.y-dy*k;
+      continue;
+    }
+    const s=w*g*DRIFT_ISSUE*dt/d;
+    it.pos[0]+=dx*s; it.pos[1]+=dy*s;
+  }
+}
+function update(dt){
+  simTime+=dt; sceneT+=dt;
+  w+=(wTarget()-w)*Math.min(1,dt*1.2);
+  const spT=(sceneIdx===1)?9*Math.sin(Math.PI*Math.min(sceneT/14,1)):0;
+  spread+=(spT-spread)*Math.min(1,dt*2);
+  for(const a of ACTORS){
+    if(a.bsw){ // Lissajous-style wandering: independent X and Y oscillations
+      a.pos[0]=BSW_AMP_X*Math.sin(2*Math.PI*simTime/BSW_PERIOD_X);
+      a.pos[1]=a.home[1]+BSW_AMP_Y*Math.sin(2*Math.PI*simTime/BSW_PERIOD_Y+2);
+      a.pos[1]=Math.max(-PLANE.hy+2,Math.min(PLANE.hy-2,a.pos[1]));
+      continue;
+    }
+    if(a.well){ a.pos[0]=a.home[0]+spread*0.4; a.pos[1]=a.home[1]; continue; }
+    // gentle idle motion within a limited range
+    let bx=a.home[0]+IDLE_AMP*Math.sin(simTime*a.fx+a.ph)+spread*a.side;
+    let by=a.home[1]+IDLE_AMP*Math.sin(simTime*a.fy+a.ph*2.3);
+    if(a.side<0) bx=Math.min(bx,-1.5); else bx=Math.max(bx,1.5); // never cross center
+    bx=Math.max(-PLANE.hx+2,Math.min(PLANE.hx-2,bx));
+    by=Math.max(-PLANE.hy+2,Math.min(PLANE.hy-2,by));
+    a.pos[0]=bx+a.off[0]; a.pos[1]=by+a.off[1];
+  }
+  driftStep(dt);
+  if(w>=W_BREAK && !breached) doBreach(false);
+  if(sceneT>=SCENE_DUR[sceneIdx] && sceneIdx<4) setScene(sceneIdx+1,true);
+}
+function genCracks(){
+  const bp=breachPoint(), base=Math.atan2(WELL.y-bp.y,WELL.x-bp.x), paths=[];
+  for(let i=0;i<7;i++){
+    const len=7+Math.random()*9, n=5, pts=[[bp.x,bp.y]];
+    let x=bp.x,y=bp.y,a=base+(Math.random()-0.5)*1.6;
+    for(let j=0;j<n;j++){
+      a+=(Math.random()-0.5)*0.7;
+      x+=Math.cos(a)*(len/n); y+=Math.sin(a)*(len/n);
+      pts.push([x,y]);
+    }
+    paths.push(pts);
+  }
+  return paths;
+}
+function doBreach(silent){
+  breached=true; crackPaths=genCracks();
+  if(renderer) renderer.onBreach(silent);
+}
+function resetSim(){
+  w=0; spread=0; breached=false; crackPaths=null;
+  for(const a of ACTORS){ a.off[0]=0;a.off[1]=0; a.pos[0]=a.home[0]; a.pos[1]=a.home[1]; }
+  for(const it of ISSUES){ it.pos[0]=it.base[0]; it.pos[1]=it.base[1]; it.captured=false; it.mix=0; }
+  if(renderer) renderer.onReset();
+}
+function presimRamp(w0,w1,secs){
+  const dt=.08,n=Math.ceil(secs/dt);
+  for(let i=1;i<=n;i++){
+    w=w0+(w1-w0)*(i/n);
+    for(const a of ACTORS) if(a.susc>0){ a.pos[0]=a.home[0]+a.off[0]; a.pos[1]=a.home[1]+a.off[1]; }
+    driftStep(dt);
+    if(w>=W_BREAK && !breached) doBreach(true);
+  }
+}
+function setScene(n,flow){
+  sceneIdx=n; sceneT=0;
+  if(!flow){
+    resetSim();
+    if(n>=3) presimRamp(0,W_S3,S3_RAMP+2);
+    if(n>=4){ presimRamp(W_S3,W_MAX,S4_RAMP+2); presimRamp(W_MAX,W_MAX,6); }
+    w = n>=4?W_MAX : n===3?W_S3 : 0;
+  }
+  document.getElementById('capTitle').textContent='Act '+ROMAN[n]+' \u2014 \u201C'+CAPTIONS[n].t+'\u201D';
+  document.getElementById('capText').textContent=CAPTIONS[n].x;
+  dots.forEach((d,i)=>d.classList.toggle('active',i===n));
+}
+function nextScene(){ if(sceneIdx<4) setScene(sceneIdx+1,true); }
+
+/* ==================== UI ==================== */
+const topbar=document.getElementById('topbar'), dots=[];
+for(let i=0;i<5;i++){
+  const b=document.createElement('button');
+  b.textContent=i+1;
+  b.title='Act '+ROMAN[i];
+  b.addEventListener('click',e=>{e.stopPropagation();setScene(i,false);});
+  topbar.appendChild(b); dots.push(b);
+}
+const btnPlay=document.getElementById('btnPlay');
+function togglePlay(){ playing=!playing; btnPlay.innerHTML=playing?'&#10074;&#10074;':'&#9654;'; }
+btnPlay.addEventListener('click',e=>{e.stopPropagation();togglePlay();});
+document.getElementById('btnRestart').addEventListener('click',e=>{e.stopPropagation();setScene(0,false);});
+document.getElementById('stage').addEventListener('click',nextScene);
+window.addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();nextScene();}
+  else if(e.code==='KeyP'){togglePlay();}
+  else if(e.key>='1'&&e.key<='5'){setScene(+e.key-1,false);}
+});
+
+/* ==================== HELPERS (colors, labels) ==================== */
+function css(c){return '#'+c.toString(16).padStart(6,'0');}
+function lerpHex(c1,c2,t){
+  const r1=c1>>16&255,g1=c1>>8&255,b1=c1&255,r2=c2>>16&255,g2=c2>>8&255,b2=c2&255;
+  return 'rgb('+Math.round(r1+(r2-r1)*t)+','+Math.round(g1+(g2-g1)*t)+','+Math.round(b1+(b2-b1)*t)+')';
+}
+function webglOK(){
+  try{
+    const c=document.createElement('canvas');
+    return !!(window.WebGLRenderingContext&&(c.getContext('webgl')||c.getContext('experimental-webgl')));
+  }catch(e){ return false; }
+}
+
+/* ==================== THREE.JS RENDERER ==================== */
+function initThree(){
+  let gl;
+  try{ gl=new THREE.WebGLRenderer({antialias:true}); }catch(e){ return null; }
+  gl.setPixelRatio(Math.min(devicePixelRatio,2));
+  gl.setSize(innerWidth,innerHeight);
+  document.getElementById('stage').appendChild(gl.domElement);
+  const sc=new THREE.Scene();
+  sc.background=new THREE.Color(0x0a0e18);
+  sc.fog=new THREE.FogExp2(0x0a0e18,0.0055);
+  const cam=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,1,600);
+  let camR=85;
+  sc.add(new THREE.AmbientLight(0x8899bb,.55));
+  const dl=new THREE.DirectionalLight(0xffffff,.85); dl.position.set(30,60,40); sc.add(dl);
+  const wellLight=new THREE.PointLight(AFD_HEX,0,70); sc.add(wellLight);
+  const flashLight=new THREE.PointLight(0xffe0a0,0,50); sc.add(flashLight);
+  let flashI=0;
+
+  // --- grid ---
+  function gridBaseData(){
+    const p=[];
+    for(let x=-PLANE.hx;x<=PLANE.hx;x+=5)
+      for(let y=-PLANE.hy;y<PLANE.hy;y+=2) p.push(x,y,x,y+2);
+    for(let y=-PLANE.hy;y<=PLANE.hy;y+=5)
+      for(let x=-PLANE.hx;x<PLANE.hx;x+=2) p.push(x,y,x+2,y);
+    return new Float32Array(p);
+  }
+  const gridBase=gridBaseData(), nGP=gridBase.length/2;
+  const gridGeo=new THREE.BufferGeometry();
+  const gridArr=new Float32Array(nGP*3);
+  gridGeo.setAttribute('position',new THREE.BufferAttribute(gridArr,3));
+  const grid=new THREE.LineSegments(gridGeo,
+    new THREE.LineBasicMaterial({color:0x33507a,transparent:true,opacity:.8}));
+  sc.add(grid);
+  // ghost flat grid for Act V
+  const ghostArr=new Float32Array(nGP*3);
+  for(let i=0;i<nGP;i++){ghostArr[i*3]=gridBase[i*2];ghostArr[i*3+1]=0;ghostArr[i*3+2]=gridBase[i*2+1];}
+  const ghostGeo=new THREE.BufferGeometry();
+  ghostGeo.setAttribute('position',new THREE.BufferAttribute(ghostArr,3));
+  const ghost=new THREE.LineSegments(ghostGeo,
+    new THREE.LineBasicMaterial({color:0x9db8e8,transparent:true,opacity:.12}));
+  ghost.visible=false; sc.add(ghost);
+
+  // --- guardrails (tubes) ---
+  const railMat=new THREE.MeshBasicMaterial({color:0xffd98a});
+  function makeRail(x1,y1,x2,y2){
+    const len=Math.hypot(x2-x1,y2-y1), tub=Math.max(2,Math.round(len/1.2)), rad=6;
+    const curve=new THREE.LineCurve3(new THREE.Vector3(x1,0,y1),new THREE.Vector3(x2,0,y2));
+    const geo=new THREE.TubeGeometry(curve,tub,.45,rad,false);
+    const pos=geo.attributes.position, count=pos.count;
+    const centers=new Float32Array(count*2), offs=new Float32Array(count*3);
+    for(let i=0;i<count;i++){
+      const ring=Math.min(tub,Math.floor(i/(rad+1))), t=ring/tub;
+      const cx=x1+(x2-x1)*t, cy=y1+(y2-y1)*t;
+      centers[i*2]=cx; centers[i*2+1]=cy;
+      offs[i*3]=pos.getX(i)-cx; offs[i*3+1]=pos.getY(i); offs[i*3+2]=pos.getZ(i)-cy;
+    }
+    const m=new THREE.Mesh(geo,railMat);
+    m.userData={centers,offs};
+    return m;
+  }
+  let rails=[];
+  function buildRails(withGap){
+    rails.forEach(r=>{sc.remove(r);r.geometry.dispose();});
+    rails=[
+      makeRail(-PLANE.hx, PLANE.hy, PLANE.hx, PLANE.hy),
+      makeRail(-PLANE.hx,-PLANE.hy, PLANE.hx,-PLANE.hy),
+      makeRail(-PLANE.hx,-PLANE.hy,-PLANE.hx, PLANE.hy)
+    ];
+    const bp=breachPoint();
+    if(withGap){
+      rails.push(makeRail(PLANE.hx,-PLANE.hy,PLANE.hx,bp.y-BREACH_GAP));
+      rails.push(makeRail(PLANE.hx,bp.y+BREACH_GAP,PLANE.hx,PLANE.hy));
+    }else{
+      rails.push(makeRail(PLANE.hx,-PLANE.hy,PLANE.hx,PLANE.hy));
+    }
+    rails.forEach(r=>sc.add(r));
+  }
+  buildRails(false);
+
+  // --- cracks ---
+  let crackLines=null, crackBase=null;
+  function buildCracks(){
+    const p=[];
+    for(const path of crackPaths)
+      for(let i=0;i<path.length-1;i++) p.push(path[i][0],path[i][1],path[i+1][0],path[i+1][1]);
+    crackBase=new Float32Array(p);
+    const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array((p.length/2)*3),3));
+    crackLines=new THREE.LineSegments(geo,new THREE.LineBasicMaterial({color:0xffd98a}));
+    sc.add(crackLines);
+  }
+  function removeCracks(){ if(crackLines){sc.remove(crackLines);crackLines.geometry.dispose();crackLines=null;} }
+
+  // --- particle bursts ---
+  const bursts=[];
+  function spawnBurst(){
+    const n=110, pos=new Float32Array(n*3), vel=new Float32Array(n*3);
+    const bp=breachPoint(); displace(bp.x,bp.y);
+    const ox=bp.x+D.x, oy=D.z+1, oz=bp.y+D.y;
+    for(let i=0;i<n;i++){
+      pos[i*3]=ox; pos[i*3+1]=oy; pos[i*3+2]=oz;
+      const th=Math.random()*Math.PI*2, sp=6+Math.random()*16;
+      vel[i*3]=Math.cos(th)*sp; vel[i*3+1]=4+Math.random()*14; vel[i*3+2]=Math.sin(th)*sp;
+    }
+    const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+    const pts=new THREE.Points(geo,new THREE.PointsMaterial({color:0xffe2a8,size:1.4,
+      transparent:true,opacity:1,depthWrite:false,blending:THREE.AdditiveBlending}));
+    sc.add(pts);
+    bursts.push({pts,vel,t:0,life:1.3});
+    flashI=9;
+  }
+
+  // --- labels ---
+  function makeSprite(text,h,color){
+    const c=document.createElement('canvas'), fs=44;
+    let ctx=c.getContext('2d');
+    ctx.font='700 '+fs+'px Segoe UI, sans-serif';
+    c.width=Math.ceil(ctx.measureText(text).width)+24; c.height=fs+20;
+    ctx=c.getContext('2d');
+    ctx.font='700 '+fs+'px Segoe UI, sans-serif'; ctx.textBaseline='middle';
+    ctx.lineWidth=6; ctx.strokeStyle='rgba(5,8,15,0.9)'; ctx.strokeText(text,12,c.height/2);
+    ctx.fillStyle=color; ctx.fillText(text,12,c.height/2);
+    const tex=new THREE.CanvasTexture(c); tex.minFilter=THREE.LinearFilter;
+    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,fog:false}));
+    s.scale.set(h*c.width/c.height,h,1); s.renderOrder=10;
+    return s;
+  }
+
+  // --- actors & issues ---
+  const AFD_COL=new THREE.Color(AFD_HEX), AFD_DARK=new THREE.Color(AFD_DARK_HEX), GREY=new THREE.Color(GREY_HEX), NICHE=new THREE.Color(NICHE_HEX);
+  for(const a of ACTORS){
+    const mat=new THREE.MeshStandardMaterial({color:a.color,roughness:.4,metalness:.1,
+      emissive:new THREE.Color(a.color).multiplyScalar(.35)});
+    a.mesh=new THREE.Mesh(new THREE.SphereGeometry(2,24,18),mat);
+    if(a.outline){
+      const o=new THREE.Mesh(new THREE.SphereGeometry(2.3,24,18),
+        new THREE.MeshBasicMaterial({color:0xdfe6f0,side:THREE.BackSide}));
+      a.mesh.add(o);
+    }
+    a.baseCol=new THREE.Color(a.color);
+    a.label=makeSprite(a.name,3.4,a.name==='CDU'?'#ffffff':css(a.color));
+    sc.add(a.mesh); sc.add(a.label);
+  }
+  for(const it of ISSUES){
+    const r=it.niche?0.7:0.9;
+    it.baseCol=it.niche?NICHE:GREY;
+    it.mesh=new THREE.Mesh(new THREE.SphereGeometry(r,14,10),
+      new THREE.MeshStandardMaterial({color:it.baseCol,roughness:.6}));
+    it.label=makeSprite(it.name,2.0,it.niche?'#cfd6df':'#b9c2cf');
+    sc.add(it.mesh); sc.add(it.label);
+  }
+
+  function updateDeformed(){
+    for(let i=0;i<nGP;i++){
+      const x=gridBase[i*2],y=gridBase[i*2+1];
+      displace(x,y);
+      gridArr[i*3]=x+D.x; gridArr[i*3+1]=D.z; gridArr[i*3+2]=y+D.y;
+    }
+    gridGeo.attributes.position.needsUpdate=true;
+    for(const r of rails){
+      const {centers,offs}=r.userData, pos=r.geometry.attributes.position;
+      for(let i=0;i<pos.count;i++){
+        const cx=centers[i*2],cy=centers[i*2+1];
+        displace(cx,cy);
+        pos.setXYZ(i,cx+D.x+offs[i*3],D.z+offs[i*3+1],cy+D.y+offs[i*3+2]);
+      }
+      pos.needsUpdate=true;
+    }
+    if(crackLines){
+      const pos=crackLines.geometry.attributes.position;
+      for(let i=0;i<pos.count;i++){
+        const x=crackBase[i*2],y=crackBase[i*2+1];
+        displace(x,y);
+        pos.setXYZ(i,x+D.x,D.z+0.3,y+D.y);
+      }
+      pos.needsUpdate=true;
+    }
+  }
+
+  function render(simDt){
+    camR+=(((sceneIdx===4)?120:85)-camR)*Math.min(1,simDt*1.2);
+    const ang=camAngle();
+    cam.position.set(Math.sin(ang)*camR,camR*0.66,Math.cos(ang)*camR);
+    cam.lookAt(0,-4,0);
+    updateDeformed();
+    ghost.visible=(sceneIdx===4);
+    for(const a of ACTORS){
+      const px=a.pos[0],py=a.pos[1];
+      displace(px,py);
+      const X=px+D.x,Y=py+D.y,Z=D.z;
+      let r=2;
+      if(a.well){
+        const k=w/W_MAX, s=1+1.4*k; r=2*s;
+        a.mesh.scale.setScalar(s);
+        a.mesh.material.color.copy(a.baseCol).lerp(AFD_DARK,k*0.8);
+        a.mesh.material.emissive.copy(a.baseCol).multiplyScalar(0.35+0.45*k);
+      }
+      a.mesh.position.set(X,Z+r*0.85,Y);
+      a.label.position.set(X,Z+r*0.85+3.4,Y);
+    }
+    for(const it of ISSUES){
+      displace(it.pos[0],it.pos[1]);
+      const X=it.pos[0]+D.x,Y=it.pos[1]+D.y,Z=D.z,r=it.niche?0.7:0.9;
+      it.mesh.position.set(X,Z+r,Y);
+      it.label.position.set(X,Z+r+2.1,Y);
+      it.mesh.material.color.copy(it.baseCol).lerp(AFD_COL,it.mix);
+    }
+    wellLight.intensity=w*0.35;
+    wellLight.position.set(WELL.x,-w+3,WELL.y);
+    for(let i=bursts.length-1;i>=0;i--){
+      const b=bursts[i]; b.t+=simDt;
+      const p=b.pts.geometry.attributes.position;
+      for(let j=0;j<p.count;j++){
+        b.vel[j*3+1]-=10*simDt;
+        p.array[j*3]+=b.vel[j*3]*simDt;
+        p.array[j*3+1]+=b.vel[j*3+1]*simDt;
+        p.array[j*3+2]+=b.vel[j*3+2]*simDt;
+      }
+      p.needsUpdate=true;
+      b.pts.material.opacity=Math.max(0,1-b.t/b.life);
+      if(b.t>b.life){sc.remove(b.pts);b.pts.geometry.dispose();bursts.splice(i,1);}
+    }
+    flashI=Math.max(0,flashI-simDt*14);
+    const bp=breachPoint();
+    flashLight.intensity=flashI;
+    flashLight.position.set(bp.x,2,bp.y);
+    gl.render(sc,cam);
+  }
+  return {
+    render,
+    onBreach(silent){ buildRails(true); buildCracks(); if(!silent) spawnBurst(); },
+    onReset(){ buildRails(false); removeCracks();
+      bursts.forEach(b=>{sc.remove(b.pts);b.pts.geometry.dispose();}); bursts.length=0; flashI=0; },
+    resize(){ cam.aspect=innerWidth/innerHeight; cam.updateProjectionMatrix(); gl.setSize(innerWidth,innerHeight); }
+  };
+}
+
+/* ==================== 2.5D CANVAS FALLBACK ==================== */
+function initCanvas2D(){
+  const cv=document.createElement('canvas');
+  document.getElementById('stage').appendChild(cv);
+  const ctx=cv.getContext('2d');
+  const dpr=Math.min(devicePixelRatio||1,2);
+  function resize(){ cv.width=innerWidth*dpr; cv.height=innerHeight*dpr;
+    cv.style.width=innerWidth+'px'; cv.style.height=innerHeight+'px'; }
+  resize();
+  let camR=85, flash=0;
+  let C={x:0,y:0,z:0}, R={x:1,y:0,z:0}, U={x:0,y:1,z:0}, F={x:0,y:0,z:1};
+  function setCam(simDt){
+    camR+=(((sceneIdx===4)?120:85)-camR)*Math.min(1,simDt*1.2);
+    const ang=camAngle();
+    C={x:Math.sin(ang)*camR,y:camR*0.66,z:Math.cos(ang)*camR};
+    let f={x:-C.x,y:-4-C.y,z:-C.z}, fl=Math.hypot(f.x,f.y,f.z);
+    F={x:f.x/fl,y:f.y/fl,z:f.z/fl};
+    let r={x:F.z,y:0,z:-F.x}, rl=Math.hypot(r.x,r.y,r.z);
+    R={x:r.x/rl,y:0,z:r.z/rl};
+    U={x:R.y*F.z-R.z*F.y, y:R.z*F.x-R.x*F.z, z:R.x*F.y-R.y*F.x};
+  }
+  function proj(x,y,z){ // logical x, depth y, height z
+    const wx=x-C.x, wy=z-C.y, wz=y-C.z;
+    const Z=wx*F.x+wy*F.y+wz*F.z;
+    if(Z<2) return null;
+    const X=wx*R.x+wy*R.y+wz*R.z, Y=wx*U.x+wy*U.y+wz*U.z;
+    const Fp=cv.height*1.15;
+    return [cv.width/2+X*Fp/Z, cv.height/2-Y*Fp/Z, Z, Fp/Z];
+  }
+  function poly(pts,color,width){
+    ctx.strokeStyle=color; ctx.lineWidth=width; ctx.beginPath();
+    let started=false;
+    for(const p of pts){
+      const s=p&&proj(p[0],p[1],p[2]);
+      if(!s){started=false;continue;}
+      if(!started){ctx.moveTo(s[0],s[1]);started=true;}else ctx.lineTo(s[0],s[1]);
+    }
+    ctx.stroke();
+  }
+  function deform(x,y){ displace(x,y); return [x+D.x,y+D.y,D.z]; }
+  function render(simDt){
+    setCam(simDt);
+    ctx.fillStyle='#0a0e18'; ctx.fillRect(0,0,cv.width,cv.height);
+    // grid
+    for(let x=-PLANE.hx;x<=PLANE.hx;x+=5){
+      const pts=[]; for(let y=-PLANE.hy;y<=PLANE.hy;y+=3) pts.push(deform(x,y));
+      poly(pts,'rgba(90,120,170,0.5)',1*dpr);
+    }
+    for(let y=-PLANE.hy;y<=PLANE.hy;y+=5){
+      const pts=[]; for(let x=-PLANE.hx;x<=PLANE.hx;x+=3) pts.push(deform(x,y));
+      poly(pts,'rgba(90,120,170,0.5)',1*dpr);
+    }
+    // guardrails
+    const bp=breachPoint();
+    const railSegs=[];
+    railSegs.push([[-PLANE.hx,PLANE.hy],[PLANE.hx,PLANE.hy]]);
+    railSegs.push([[-PLANE.hx,-PLANE.hy],[PLANE.hx,-PLANE.hy]]);
+    railSegs.push([[-PLANE.hx,-PLANE.hy],[-PLANE.hx,PLANE.hy]]);
+    if(breached){
+      railSegs.push([[PLANE.hx,-PLANE.hy],[PLANE.hx,bp.y-BREACH_GAP]]);
+      railSegs.push([[PLANE.hx,bp.y+BREACH_GAP],[PLANE.hx,PLANE.hy]]);
+    }else railSegs.push([[PLANE.hx,-PLANE.hy],[PLANE.hx,PLANE.hy]]);
+    for(const seg of railSegs){
+      const [a,b]=seg, len=Math.hypot(b[0]-a[0],b[1]-a[1]), n=Math.max(2,Math.round(len/2)), pts=[];
+      for(let i=0;i<=n;i++) pts.push(deform(a[0]+(b[0]-a[0])*i/n, a[1]+(b[1]-a[1])*i/n));
+      poly(pts,'rgba(255,217,138,0.25)',8*dpr);
+      poly(pts,'#ffd98a',3*dpr);
+    }
+    // cracks
+    if(crackPaths) for(const path of crackPaths)
+      poly(path.map(p=>deform(p[0],p[1])),'#ffd98a',1.4*dpr);
+    // spheres (painter's sort)
+    const balls=[];
+    for(const it of ISSUES){
+      const d=deform(it.pos[0],it.pos[1]), s=proj(d[0],d[1],d[2]+1);
+      if(!s) continue;
+      balls.push({s,r:(it.niche?0.7:0.9)*s[3],color:lerpHex(it.niche?NICHE_HEX:GREY_HEX,AFD_HEX,it.mix),
+        label:it.name,lc:'#b9c2cf',fs:10});
+    }
+    for(const a of ACTORS){
+      const k=a.well?w/W_MAX:0, rw=a.well?2*(1+1.4*k):2;
+      const d=deform(a.pos[0],a.pos[1]), s=proj(d[0],d[1],d[2]+rw*0.85);
+      if(!s) continue;
+      balls.push({s,r:rw*s[3],
+        color:a.well?lerpHex(AFD_HEX,AFD_DARK_HEX,k*0.8):css(a.color),
+        stroke:a.outline?'#dfe6f0':null,label:a.name,
+        lc:a.name==='CDU'?'#fff':css(a.color),fs:13,bold:true});
+    }
+    balls.sort((p,q)=>q.s[2]-p.s[2]);
+    for(const b of balls){
+      ctx.beginPath(); ctx.arc(b.s[0],b.s[1],Math.max(1.5,b.r),0,Math.PI*2);
+      ctx.fillStyle=b.color; ctx.fill();
+      if(b.stroke){ctx.lineWidth=2*dpr;ctx.strokeStyle=b.stroke;ctx.stroke();}
+      ctx.font=(b.bold?'700 ':'')+(b.fs*dpr)+'px Segoe UI, sans-serif';
+      ctx.textAlign='center'; ctx.lineWidth=3*dpr; ctx.strokeStyle='rgba(5,8,15,0.85)';
+      ctx.strokeText(b.label,b.s[0],b.s[1]-b.r-5*dpr);
+      ctx.fillStyle=b.lc; ctx.fillText(b.label,b.s[0],b.s[1]-b.r-5*dpr);
+    }
+    // breach flash
+    if(flash>0){
+      const d=deform(bp.x,bp.y), s=proj(d[0],d[1],d[2]+2);
+      if(s){
+        const rad=(1.2-flash)*60*dpr+10;
+        const g=ctx.createRadialGradient(s[0],s[1],0,s[0],s[1],rad);
+        g.addColorStop(0,'rgba(255,226,168,'+(flash*0.9)+')');
+        g.addColorStop(1,'rgba(255,226,168,0)');
+        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(s[0],s[1],rad,0,Math.PI*2); ctx.fill();
+      }
+      flash-=simDt*0.9;
+    }
+  }
+  return {
+    render,
+    onBreach(silent){ flash=silent?0:1.2; },
+    onReset(){ flash=0; },
+    resize
+  };
+}
+
+/* ==================== BOOT & MAIN LOOP ==================== */
+let renderer=null;
+try{
+  if(typeof THREE==='undefined'){
+    showErr('three.js CDN did not load (blocked by network/extension?) \u2014 using 2D fallback.');
+  }else if(!webglOK()){
+    showErr('WebGL unavailable (hardware acceleration off?) \u2014 using 2D fallback.');
+  }else{
+    renderer=initThree();
+  }
+}catch(e){ showErr('3D renderer failed: '+e.message+' \u2014 using 2D fallback.'); renderer=null; }
+if(!renderer){
+  try{ renderer=initCanvas2D(); }
+  catch(e){ showErr('2D fallback also failed: '+e.message); }
+}
+if(renderer){
+  window.addEventListener('resize',()=>renderer.resize());
+  setScene(0,false);
+  const progressFill=document.getElementById('progressFill');
+  let last=performance.now();
+  function tick(now){
+    requestAnimationFrame(tick);
+    const dt=Math.min(0.05,(now-last)/1000); last=now;
+    const simDt=playing?dt:0;
+    if(playing) update(dt);
+    progressFill.style.width=Math.min(100,sceneT/SCENE_DUR[sceneIdx]*100)+'%';
+    renderer.render(simDt);
+  }
+  requestAnimationFrame(tick);
+}
+</script>
+</body>
+</html>
