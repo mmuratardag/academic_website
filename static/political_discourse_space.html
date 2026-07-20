@@ -7,6 +7,9 @@
 <style>
   html,body{margin:0;height:100%;background:#0a0e18;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
   #stage{position:fixed;inset:0}
+  /* CSS vignette: instant depth, pointer-events:none keeps click-to-advance */
+  #stage::after{content:'';position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse at center,transparent 55%,rgba(3,5,10,.55) 100%)}
   #ui{position:fixed;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between}
   .bar{display:flex;gap:8px;align-items:center;padding:12px 14px;flex-wrap:wrap}
   button{pointer-events:auto;background:rgba(20,28,46,.85);color:#dfe6f0;border:1px solid rgba(255,217,138,.35);
@@ -15,12 +18,22 @@
   button.active{background:#ffd98a;color:#101623;border-color:#ffd98a;font-weight:700}
   #caption{margin:0 auto 16px;max-width:780px;width:calc(100% - 28px);background:rgba(12,17,30,.84);
     border:1px solid rgba(255,217,138,.28);border-radius:14px;padding:14px 18px 16px;
-    backdrop-filter:blur(6px);box-sizing:border-box}
+    backdrop-filter:blur(6px);box-sizing:border-box;
+    transition:opacity .26s ease,transform .26s ease}
+  #caption.swap{opacity:0;transform:translateY(8px)}
   #progress{height:3px;background:rgba(255,255,255,.12);border-radius:2px;overflow:hidden;margin-bottom:10px}
   #progressFill{height:100%;width:0;background:#ffd98a}
   #capTitle{color:#ffd98a;font-weight:700;font-size:1.05rem;margin-bottom:6px}
   #capText{color:#dfe6f0;font-size:.92rem;line-height:1.45}
   #hint{color:rgba(223,230,240,.45);font-size:.72rem;text-align:center;padding-bottom:8px}
+  /* Act-title splash overlay */
+  #actSplash{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    pointer-events:none;opacity:0;transition:opacity .8s ease;z-index:5;text-align:center;padding:0 20px}
+  #actSplash.show{opacity:1}
+  #actSplash .splashAct{color:#ffd98a;font-size:2.4rem;font-weight:700;letter-spacing:.06em;
+    text-shadow:0 2px 22px rgba(0,0,0,.85)}
+  #actSplash .splashTitle{color:#dfe6f0;font-size:1.15rem;font-weight:400;margin-top:8px;
+    text-shadow:0 2px 14px rgba(0,0,0,.85)}
   #errbox{position:fixed;top:0;left:0;right:0;z-index:99;display:none;background:#7a1f2b;color:#ffe3e3;
     font-size:.8rem;line-height:1.4;padding:8px 40px 8px 12px;font-family:monospace;word-break:break-word}
   #errclose{position:absolute;right:8px;top:6px;background:none;border:none;color:#ffe3e3;
@@ -29,6 +42,8 @@
     #capText{font-size:.8rem}
     .bar{padding:8px;gap:6px}
     button{padding:5px 9px;font-size:12px}
+    #actSplash .splashAct{font-size:1.7rem}
+    #actSplash .splashTitle{font-size:.95rem}
   }
 </style>
 </head>
@@ -50,6 +65,7 @@
     <div id="hint">Click / Space &mdash; next act &middot; P &mdash; play/pause &middot; 1&ndash;5 &mdash; jump to act</div>
   </div>
 </div>
+<div id="actSplash"></div>
 
 <script>
 /* Diagnostic trap. Kept in its own ES5-only script block so it still runs
@@ -69,6 +85,18 @@ document.addEventListener('DOMContentLoaded',function(){
 });
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* Post-processing scripts (bloom + FXAA), loaded only if three.js arrived.
+   document.write during parse is synchronous, so load order is preserved
+   and a failed three.js CDN produces no extra errors here. */
+if(typeof THREE!=='undefined'){
+  ['shaders/CopyShader','shaders/LuminosityHighPassShader','shaders/FXAAShader',
+   'postprocessing/EffectComposer','postprocessing/RenderPass',
+   'postprocessing/ShaderPass','postprocessing/UnrealBloomPass'].forEach(function(p){
+    document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/'+p+'.js"><\/script>');
+  });
+}
+</script>
 <script>
 'use strict';
 /* ==================== TUNABLE CONSTANTS ==================== */
@@ -96,9 +124,23 @@ const BREACH_GAP   = 4;     // half-width of the guardrail gap (units)
 const CAM_BASE_ANG    = 0;    // viewing anchor (rad). 0 = camera front-on: -x left, +x right
 const CAM_SWAY_AMP    = 0.10; // max sway around anchor (rad). Set 0 to lock camera entirely
 const CAM_SWAY_PERIOD = 30;   // seconds per full sway cycle
+/* Breach beat */
+const SLOWMO_SCALE    = 0.25; // time scale at the moment of breach
+const SLOWMO_RECOVER  = 2.5;  // recovery rate back to 1.0 (per second, eased)
+const SHAKE_DECAY     = 1.2;  // camera shake decay per second
+/* Ambient inflow particles */
+const INFLOW_N        = 350;
 
 /* ==================== SHARED STATE ==================== */
 const AFD_HEX = 0x7FDBFF, AFD_DARK_HEX = 0x1d4e89, GREY_HEX = 0x9E9E9E, NICHE_HEX = 0xCCCCCC;
+/* Low-salience issues: pulled DOWN toward the near-black background
+   (#0a0e18) rather than up toward white, so they visually recede instead
+   of standing out. Combined with reduced size/opacity/label contrast
+   below, this makes them read as "present but backgrounded." */
+const LOWSAL_HEX        = 0x3b4358;  // dim blue-grey, close to the grid line color
+const LOWSAL_OPACITY    = 0.42;      // node + label opacity
+const LOWSAL_LABEL_CSS  = '#57607a'; // muted label fill (2D canvas + label texture)
+const LOWSAL_MIX_CAP    = 0.35;      // cap on how far captured low-salience issues brighten toward AfD cyan
 
 /* susc: how strongly a party slides down the well once it responds.
    wOn:  warp threshold below which the party resists the pull entirely (default 0).
@@ -117,17 +159,56 @@ const ACTORS = [
 ACTORS.forEach((a,i)=>{ a.off=[0,0]; a.pos=[a.home[0],a.home[1]];
   a.ph=i*1.7; a.fx=0.11+0.013*i; a.fy=0.085+0.011*i; });
 
+/* Issues that directly/indirectly shape opinion but are less salient in
+   THIS particular election (Berlin) get rendered as visually backgrounded. */
+const LOW_SALIENCE = new Set(['Ongoing Wars','Transatlantic Relations',
+  'Relationship with China','Strategic Sovereignty']);
+
 const ISSUE_DATA=[
-  ['Climate',-30,12],['Energy crisis',-8,16],['Taxation',18,-14],['Regulation',5,-18],
-  ['Income inequality',-34,-16],['Labor market',2,6],['Unemployment',12,-10],['Immigration',30,12],
-  ['Social welfare',-20,-12],['Science/Education',-30,22],['Public investment',-4,-8],
-  ['Digitalization',8,-24],['Public health',-16,4],['Crime/Violence',33,-12],['Trade',15,22],
-  ['Transatlantic relations',25, 19],['Ongoing wars',0,26]
+  ['Climate',-22,13],['Energy Transition Crisis',-10,19],['Urban Mobility',-32,8],['Taxation',18,-14],['Regulation',2,-16],
+  ['Income Inequality',-34,-18],['Labor Market',3,5],['Unemployment',9,-9],['Immigration',32,10],
+  ['Social Welfare',-18,-10],['Science and Education',-28,24],['Fiscal Deficits',-7,-6],['Infrastructure',-9,-1],
+  ['Digitalization',11,-23],['Healthcare Accessibility',-17,3],['Crime & Security',33,-12],['Industrial Resilience',13,25],
+  ['Transatlantic Relations',26,17],['Ongoing Wars',0,27],['Disinformation',4,14],
+  ['Relationship with China',20,22],['Strategic Sovereignty',7,20]
 ];
-const NICHE_DATA=[['Voting rights',-38,4],['Housing crisis',-26,-22],['Remigration',39,-4]];
+const NICHE_DATA=[['Voting rights',-39,1],['Housing Crisis',-26,-22],['Remigration',39,-4]];
+
+/* Simple repulsion pass so issue labels self-separate regardless of later
+   edits to the numbers above. Runs once, before ISSUES snapshots the base
+   positions. Points are clamped inside the guardrails; coincident points
+   get a deterministic nudge so they can separate. */
+function declutter(data, minDist = 8, iterations = 50){
+  const xMax = PLANE.hx - 4, yMax = PLANE.hy - 3; // stay inside the guardrails
+  for(let it = 0; it < iterations; it++){
+    for(let i = 0; i < data.length; i++){
+      for(let j = i + 1; j < data.length; j++){
+        let dx = data[j][1] - data[i][1], dy = data[j][2] - data[i][2];
+        let d = Math.hypot(dx, dy);
+        if(d < 1e-6){ // coincident points: deterministic nudge, then separate
+          dx = ((i + j) % 7) - 3 || 1; dy = ((i * 3 + j) % 5) - 2 || 1;
+          d = Math.hypot(dx, dy);
+        }
+        if(d < minDist){
+          const push = (minDist - d) / 2;
+          data[i][1] -= (dx / d) * push; data[i][2] -= (dy / d) * push;
+          data[j][1] += (dx / d) * push; data[j][2] += (dy / d) * push;
+        }
+      }
+    }
+    for(const p of data){
+      p[1] = Math.max(-xMax, Math.min(xMax, p[1]));
+      p[2] = Math.max(-yMax, Math.min(yMax, p[2]));
+    }
+  }
+  return data;
+}
+declutter(ISSUE_DATA);
+
 const ISSUES=[];
-ISSUE_DATA.forEach(d=>ISSUES.push({name:d[0],base:[d[1],d[2]],pos:[d[1],d[2]],niche:false,captured:false,mix:0}));
-NICHE_DATA.forEach(d=>ISSUES.push({name:d[0],base:[d[1],d[2]],pos:[d[1],d[2]],niche:true, captured:false,mix:0}));
+ISSUE_DATA.forEach(d=>ISSUES.push({name:d[0],base:[d[1],d[2]],pos:[d[1],d[2]],niche:false,captured:false,mix:0,
+  lowSal:LOW_SALIENCE.has(d[0])}));
+NICHE_DATA.forEach(d=>ISSUES.push({name:d[0],base:[d[1],d[2]],pos:[d[1],d[2]],niche:true, captured:false,mix:0,lowSal:false}));
 
 const ROMAN=['I','II','III','IV','V'];
 const CAPTIONS=[
@@ -136,7 +217,7 @@ const CAPTIONS=[
  {t:'The Polarization Story',
   x:'The polarization metaphor claims the crisis is symmetric: two camps drifting to opposite poles. Note that it quietly assumes the plane stays flat, and the guardrails are never in question. The only problem is distance.'},
  {t:'Radicalization Warps the Space',
-  x:'The evidence shows something different in kind. Radical-right parties like the AfD reshape the space itself through norm-breaking, authoritarian, and violent rhetoric fused with threat narratives and conspiracy, they acquire mass. They don\u2019t just move to a farther point; they bend the discourse space around themselves.'},
+  x:'The evidence shows something different in kind. Radical-right parties like the AfD reshape the space itself through norm-breaking, authoritarian, and violent rhetoric fused with threat narratives and conspiracy, increasing their political salience and gravitational pull. They don\u2019t just move to a farther point; they bend the discourse space around themselves.'},
  {t:'Gravitational Pull, Not Repulsion',
   x:'Other parties don\u2019t recoil in equal and opposite fashion, they slide down the well. Their rhetoric drifts closer to the radical party; issues are dragged into its framing and eventually captured. Where the mass presses hardest, the guardrails give way.'},
  {t:'The Stakes of Misdiagnosis',
@@ -144,14 +225,16 @@ const CAPTIONS=[
 ];
 
 let simTime=0, sceneIdx=0, sceneT=0, playing=true, breached=false, w=0, spread=0, crackPaths=null;
+/* Breach beat state (engine-level: drives both renderers) */
+let timeScale=1, shake=0;
 
 /* ==================== FIELD ==================== */
 const TWO_SIG2 = 2*SIGMA*SIGMA;
 function gauss(x,y){const dx=x-WELL.x,dy=y-WELL.y;return Math.exp(-(dx*dx+dy*dy)/TWO_SIG2);}
-const D={x:0,y:0,z:0};
+const D={x:0,y:0,z:0,g:0};
 function displace(x,y){ // display-time deformation: horizontal convergence + funnel depth
   const g=gauss(x,y), pull=Math.min(0.6,w*0.04)*g;
-  D.x=(WELL.x-x)*pull; D.y=(WELL.y-y)*pull; D.z=-w*g; return D;
+  D.x=(WELL.x-x)*pull; D.y=(WELL.y-y)*pull; D.z=-w*g; D.g=g; return D;
 }
 function breachPoint(){
   return {x:PLANE.hx-0.5, y:Math.max(-PLANE.hy+4,Math.min(PLANE.hy-4,WELL.y))};
@@ -238,10 +321,11 @@ function genCracks(){
 }
 function doBreach(silent){
   breached=true; crackPaths=genCracks();
+  if(!silent){ timeScale=SLOWMO_SCALE; shake=1; } // cinematic beat: slow-mo + shake
   if(renderer) renderer.onBreach(silent);
 }
 function resetSim(){
-  w=0; spread=0; breached=false; crackPaths=null;
+  w=0; spread=0; breached=false; crackPaths=null; timeScale=1; shake=0;
   for(const a of ACTORS){ a.off[0]=0;a.off[1]=0; a.pos[0]=a.home[0]; a.pos[1]=a.home[1]; }
   for(const it of ISSUES){ it.pos[0]=it.base[0]; it.pos[1]=it.base[1]; it.captured=false; it.mix=0; }
   if(renderer) renderer.onReset();
@@ -255,6 +339,22 @@ function presimRamp(w0,w1,secs){
     if(w>=W_BREAK && !breached) doBreach(true);
   }
 }
+let capTO=null, splashTO=null;
+function showSplash(n){
+  const el=document.getElementById('actSplash');
+  // Guard against retrigger spam when scrubbing with the 1-5 keys
+  if(el.dataset.act===String(n) && el.classList.contains('show')) return;
+  el.dataset.act=String(n);
+  el.innerHTML='';
+  const act=document.createElement('div'); act.className='splashAct';
+  act.textContent='Act '+ROMAN[n];
+  const title=document.createElement('div'); title.className='splashTitle';
+  title.textContent=CAPTIONS[n].t;
+  el.appendChild(act); el.appendChild(title);
+  el.classList.add('show');
+  clearTimeout(splashTO);
+  splashTO=setTimeout(()=>el.classList.remove('show'),2000);
+}
 function setScene(n,flow){
   sceneIdx=n; sceneT=0;
   if(!flow){
@@ -263,8 +363,16 @@ function setScene(n,flow){
     if(n>=4){ presimRamp(W_S3,W_MAX,S4_RAMP+2); presimRamp(W_MAX,W_MAX,6); }
     w = n>=4?W_MAX : n===3?W_S3 : 0;
   }
-  document.getElementById('capTitle').textContent='Act '+ROMAN[n]+' \u2014 \u201C'+CAPTIONS[n].t+'\u201D';
-  document.getElementById('capText').textContent=CAPTIONS[n].x;
+  // caption crossfade instead of instant swap
+  const capEl=document.getElementById('caption');
+  capEl.classList.add('swap');
+  clearTimeout(capTO);
+  capTO=setTimeout(function(){
+    document.getElementById('capTitle').textContent='Act '+ROMAN[n]+' \u2014 \u201C'+CAPTIONS[n].t+'\u201D';
+    document.getElementById('capText').textContent=CAPTIONS[n].x;
+    capEl.classList.remove('swap');
+  },260);
+  showSplash(n);
   dots.forEach((d,i)=>d.classList.toggle('active',i===n));
 }
 function nextScene(){ if(sceneIdx<4) setScene(sceneIdx+1,true); }
@@ -320,7 +428,34 @@ function initThree(){
   const flashLight=new THREE.PointLight(0xffe0a0,0,50); sc.add(flashLight);
   let flashI=0;
 
-  // --- grid ---
+  /* --- bloom + FXAA post-processing (graceful fallback to plain render) ---
+     Threshold 0.9 (not 0.5): white/near-white labels sit at luminance ~1.0
+     and would bloom hard at 0.5. At 0.9 they pick up only a soft glow.
+     FXAA compensates for the loss of MSAA under EffectComposer. */
+  let composer=null, bloom=null, fxaa=null;
+  function setFxaaRes(){
+    if(!fxaa) return;
+    const pr=gl.getPixelRatio();
+    fxaa.material.uniforms.resolution.value.set(1/(innerWidth*pr),1/(innerHeight*pr));
+  }
+  try{
+    if(THREE.EffectComposer&&THREE.RenderPass&&THREE.UnrealBloomPass){
+      composer=new THREE.EffectComposer(gl);
+      composer.setPixelRatio(gl.getPixelRatio());
+      composer.setSize(innerWidth,innerHeight);
+      composer.addPass(new THREE.RenderPass(sc,cam));
+      bloom=new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),0.85,0.5,0.9);
+      composer.addPass(bloom);
+      if(THREE.FXAAShader&&THREE.ShaderPass){
+        fxaa=new THREE.ShaderPass(THREE.FXAAShader);
+        setFxaaRes();
+        composer.addPass(fxaa);
+      }
+      sc.fog.density=0.0045; // slightly thinner fog so bloom doesn't go milky
+    }
+  }catch(e){ composer=null; bloom=null; fxaa=null; }
+
+  // --- grid (vertex-colored: heats up toward AfD cyan near the well) ---
   function gridBaseData(){
     const p=[];
     for(let x=-PLANE.hx;x<=PLANE.hx;x+=5)
@@ -332,9 +467,15 @@ function initThree(){
   const gridBase=gridBaseData(), nGP=gridBase.length/2;
   const gridGeo=new THREE.BufferGeometry();
   const gridArr=new Float32Array(nGP*3);
+  const gridCol=new Float32Array(nGP*3);
   gridGeo.setAttribute('position',new THREE.BufferAttribute(gridArr,3));
+  gridGeo.setAttribute('color',new THREE.BufferAttribute(gridCol,3));
+  /* NOTE: with vertexColors:true the material color MULTIPLIES the vertex
+     colors, so it must stay white; the base grid tint is baked per-vertex. */
+  const GRID_C=new THREE.Color(0x33507a), HOT_C=new THREE.Color(0x7fdcff), _hc=new THREE.Color();
+  for(let i=0;i<nGP;i++){ gridCol[i*3]=GRID_C.r; gridCol[i*3+1]=GRID_C.g; gridCol[i*3+2]=GRID_C.b; }
   const grid=new THREE.LineSegments(gridGeo,
-    new THREE.LineBasicMaterial({color:0x33507a,transparent:true,opacity:.8}));
+    new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:.8}));
   sc.add(grid);
   // ghost flat grid for Act V
   const ghostArr=new Float32Array(nGP*3);
@@ -346,7 +487,9 @@ function initThree(){
   ghost.visible=false; sc.add(ghost);
 
   // --- guardrails (tubes) ---
+  const railGold=new THREE.Color(0xffd98a), railRed=new THREE.Color(0xff4a3c);
   const railMat=new THREE.MeshBasicMaterial({color:0xffd98a});
+  let postBreach=0; // eases 0->1 after breach, gating the warning strobe off
   function makeRail(x1,y1,x2,y2){
     const len=Math.hypot(x2-x1,y2-y1), tub=Math.max(2,Math.round(len/1.2)), rad=6;
     const curve=new THREE.LineCurve3(new THREE.Vector3(x1,0,y1),new THREE.Vector3(x2,0,y2));
@@ -396,6 +539,48 @@ function initThree(){
   }
   function removeCracks(){ if(crackLines){sc.remove(crackLines);crackLines.geometry.dispose();crackLines=null;} }
 
+  // --- well halo sprite (pulsing radial glow at the funnel bottom) ---
+  function glowTex(){
+    const c=document.createElement('canvas'); c.width=c.height=256;
+    const x=c.getContext('2d'), g=x.createRadialGradient(128,128,0,128,128,128);
+    g.addColorStop(0,'rgba(140,220,255,0.9)'); g.addColorStop(0.35,'rgba(80,180,255,0.35)');
+    g.addColorStop(1,'rgba(80,180,255,0)');
+    x.fillStyle=g; x.fillRect(0,0,256,256);
+    return new THREE.CanvasTexture(c);
+  }
+  const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(),transparent:true,
+    blending:THREE.AdditiveBlending,depthWrite:false,opacity:0}));
+  sc.add(halo);
+
+  // --- event horizon ring (hugs the funnel surface at the capture rim) ---
+  const RING_N=72, ringBase=new Float32Array(RING_N*2);
+  for(let i=0;i<RING_N;i++){
+    const a=i/RING_N*Math.PI*2;
+    ringBase[i*2]  =WELL.x+Math.cos(a)*(RIM_D+2.5);
+    ringBase[i*2+1]=WELL.y+Math.sin(a)*(RIM_D+2.5);
+  }
+  const ringGeo=new THREE.BufferGeometry();
+  ringGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(RING_N*3),3));
+  const ringMat=new THREE.LineBasicMaterial({color:AFD_HEX,transparent:true,opacity:0});
+  const horizon=new THREE.LineLoop(ringGeo,ringMat);
+  sc.add(horizon);
+
+  // --- ambient inflow particles (vortex drift toward the well) ---
+  // Logical positions live in inBase; render positions are displaced per frame
+  // (same pattern as crackBase).
+  const inBase=new Float32Array(INFLOW_N*2);
+  function inRespawn(i){
+    inBase[i*2]  =(Math.random()*2-1)*PLANE.hx;
+    inBase[i*2+1]=(Math.random()*2-1)*PLANE.hy;
+  }
+  for(let i=0;i<INFLOW_N;i++) inRespawn(i);
+  const inGeo=new THREE.BufferGeometry();
+  inGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(INFLOW_N*3),3));
+  const inMat=new THREE.PointsMaterial({color:0x9fe4ff,size:0.8,transparent:true,opacity:0,
+    depthWrite:false,blending:THREE.AdditiveBlending});
+  const inflow=new THREE.Points(inGeo,inMat);
+  sc.add(inflow);
+
   // --- particle bursts ---
   const bursts=[];
   function spawnBurst(){
@@ -416,24 +601,47 @@ function initThree(){
     flashI=9;
   }
 
+  // --- expanding shockwave rings at the breach ---
+  const shocks=[];
+  function spawnShock(){
+    const bp=breachPoint(); displace(bp.x,bp.y);
+    const mesh=new THREE.Mesh(
+      new THREE.RingGeometry(0.9,1,48),
+      new THREE.MeshBasicMaterial({color:0xffe2a8,transparent:true,opacity:0.9,
+        side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending}));
+    mesh.rotation.x=-Math.PI/2;                    // lie flat on the plane
+    mesh.position.set(bp.x+D.x,D.z+0.3,bp.y+D.y);  // slight lift avoids z-fighting
+    sc.add(mesh);
+    shocks.push({mesh,t:0,life:0.9});
+  }
+  function clearShocks(){
+    shocks.forEach(s=>{sc.remove(s.mesh);s.mesh.geometry.dispose();s.mesh.material.dispose();});
+    shocks.length=0;
+  }
+
   // --- labels ---
-  function makeSprite(text,h,color){
+  /* muted: reduces stroke weight/contrast so the label itself recedes,
+     not just its fill color. */
+  function makeSprite(text,h,color,muted){
     const c=document.createElement('canvas'), fs=44;
     let ctx=c.getContext('2d');
     ctx.font='700 '+fs+'px Segoe UI, sans-serif';
     c.width=Math.ceil(ctx.measureText(text).width)+24; c.height=fs+20;
     ctx=c.getContext('2d');
     ctx.font='700 '+fs+'px Segoe UI, sans-serif'; ctx.textBaseline='middle';
-    ctx.lineWidth=6; ctx.strokeStyle='rgba(5,8,15,0.9)'; ctx.strokeText(text,12,c.height/2);
+    ctx.lineWidth=muted?3:6; ctx.strokeStyle=muted?'rgba(5,8,15,0.45)':'rgba(5,8,15,0.9)';
+    ctx.strokeText(text,12,c.height/2);
     ctx.fillStyle=color; ctx.fillText(text,12,c.height/2);
     const tex=new THREE.CanvasTexture(c); tex.minFilter=THREE.LinearFilter;
-    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,fog:false}));
+    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,fog:false,
+      opacity:muted?LOWSAL_OPACITY:1}));
     s.scale.set(h*c.width/c.height,h,1); s.renderOrder=10;
     return s;
   }
 
   // --- actors & issues ---
-  const AFD_COL=new THREE.Color(AFD_HEX), AFD_DARK=new THREE.Color(AFD_DARK_HEX), GREY=new THREE.Color(GREY_HEX), NICHE=new THREE.Color(NICHE_HEX);
+  const AFD_COL=new THREE.Color(AFD_HEX), AFD_DARK=new THREE.Color(AFD_DARK_HEX), GREY=new THREE.Color(GREY_HEX),
+        NICHE=new THREE.Color(NICHE_HEX), LOWSAL=new THREE.Color(LOWSAL_HEX);
   for(const a of ACTORS){
     const mat=new THREE.MeshStandardMaterial({color:a.color,roughness:.4,metalness:.1,
       emissive:new THREE.Color(a.color).multiplyScalar(.35)});
@@ -444,25 +652,34 @@ function initThree(){
       a.mesh.add(o);
     }
     a.baseCol=new THREE.Color(a.color);
+    a.baseEm=new THREE.Color(a.color).multiplyScalar(.35); // stored once: heat lerp never compounds
     a.label=makeSprite(a.name,3.4,a.name==='CDU'?'#ffffff':css(a.color));
     sc.add(a.mesh); sc.add(a.label);
   }
   for(const it of ISSUES){
-    const r=it.niche?0.7:0.9;
-    it.baseCol=it.niche?NICHE:GREY;
+    const r=it.niche?0.7:(it.lowSal?0.55:0.9); // low-salience issues render smaller too
+    it.baseCol=it.niche?NICHE:(it.lowSal?LOWSAL:GREY);
     it.mesh=new THREE.Mesh(new THREE.SphereGeometry(r,14,10),
-      new THREE.MeshStandardMaterial({color:it.baseCol,roughness:.6}));
-    it.label=makeSprite(it.name,2.0,it.niche?'#cfd6df':'#b9c2cf');
+      new THREE.MeshStandardMaterial({color:it.baseCol,roughness:.6,
+        transparent:it.lowSal,opacity:it.lowSal?LOWSAL_OPACITY:1}));
+    it.label=makeSprite(it.name,it.lowSal?1.5:2.0,
+      it.niche?'#cfd6df':(it.lowSal?LOWSAL_LABEL_CSS:'#b9c2cf'), it.lowSal);
     sc.add(it.mesh); sc.add(it.label);
   }
 
   function updateDeformed(){
+    const kW=w/W_MAX;
     for(let i=0;i<nGP;i++){
       const x=gridBase[i*2],y=gridBase[i*2+1];
       displace(x,y);
       gridArr[i*3]=x+D.x; gridArr[i*3+1]=D.z; gridArr[i*3+2]=y+D.y;
+      // vertex heat: the funnel ignites toward AfD cyan as w grows
+      const heat=Math.min(1,D.g*kW*2.4);
+      _hc.copy(GRID_C).lerp(HOT_C,heat);
+      gridCol[i*3]=_hc.r; gridCol[i*3+1]=_hc.g; gridCol[i*3+2]=_hc.b;
     }
     gridGeo.attributes.position.needsUpdate=true;
+    gridGeo.attributes.color.needsUpdate=true;
     for(const r of rails){
       const {centers,offs}=r.userData, pos=r.geometry.attributes.position;
       for(let i=0;i<pos.count;i++){
@@ -481,15 +698,59 @@ function initThree(){
       }
       pos.needsUpdate=true;
     }
+    // event horizon ring, displaced like the cracks
+    const rp=ringGeo.attributes.position;
+    for(let i=0;i<RING_N;i++){
+      const x=ringBase[i*2],y=ringBase[i*2+1];
+      displace(x,y);
+      rp.setXYZ(i,x+D.x,D.z+0.25,y+D.y);
+    }
+    rp.needsUpdate=true;
   }
 
-  function render(simDt){
-    camR+=(((sceneIdx===4)?120:85)-camR)*Math.min(1,simDt*1.2);
+  function render(simDt,rawDt){
+    rawDt=rawDt===undefined?simDt:rawDt;
+    const kWell=w/W_MAX;
+    camR+=(((sceneIdx===4)?120:85)-camR)*Math.min(1,rawDt*1.2);
     const ang=camAngle();
     cam.position.set(Math.sin(ang)*camR,camR*0.66,Math.cos(ang)*camR);
-    cam.lookAt(0,-4,0);
+    // camera drift: framing subtly submits to the gravity well
+    cam.lookAt(WELL.x*0.15*kWell,-4-w*0.15,WELL.y*0.15*kWell);
+    // breach shake: translational, applied after lookAt (decay lives in tick)
+    if(shake>0){
+      cam.position.x+=(Math.random()-.5)*shake*2.2;
+      cam.position.y+=(Math.random()-.5)*shake*1.3;
+    }
     updateDeformed();
     ghost.visible=(sceneIdx===4);
+    if(ghost.visible) ghost.material.opacity=0.10+0.06*Math.sin(simTime*1.2); // haunting pulse
+    // guardrail warning strobe: ramps as w nears W_BREAK, gated off after breach
+    if(breached) postBreach=Math.min(1,postBreach+rawDt*0.6);
+    const warn=clamp01((w-(W_BREAK-3.5))/3.5)*(1-postBreach);
+    railMat.color.copy(railGold).lerp(railRed,warn*(0.5+0.5*Math.sin(simTime*7)));
+    // well halo
+    displace(WELL.x,WELL.y);
+    halo.position.set(WELL.x+D.x,D.z+2.5,WELL.y+D.y);
+    const hs=16+w*1.8; halo.scale.set(hs,hs,1);
+    halo.material.opacity=Math.min(1,kWell*1.1)*(0.85+0.15*Math.sin(simTime*2.1));
+    // event horizon ring fade-in
+    ringMat.opacity=Math.min(1,kWell*1.3)*(0.55+0.2*Math.sin(simTime*2.6));
+    // ambient inflow: radial pull + tangential swirl, speed proportional to w*gauss
+    const ip=inGeo.attributes.position;
+    for(let i=0;i<INFLOW_N;i++){
+      let x=inBase[i*2],y=inBase[i*2+1];
+      const dx=WELL.x-x,dy=WELL.y-y,d=Math.hypot(dx,dy);
+      if(d<RIM_D){ inRespawn(i); x=inBase[i*2]; y=inBase[i*2+1]; }
+      else{
+        const s=w*gauss(x,y)*1.8*simDt/Math.max(d,.001);
+        x+=dx*s-dy*s*0.7; y+=dy*s+dx*s*0.7;
+        inBase[i*2]=x; inBase[i*2+1]=y;
+      }
+      displace(x,y);
+      ip.setXYZ(i,x+D.x,D.z+0.4,y+D.y);
+    }
+    ip.needsUpdate=true;
+    inMat.opacity=Math.min(1,kWell*1.4)*0.5;
     for(const a of ACTORS){
       const px=a.pos[0],py=a.pos[1];
       displace(px,py);
@@ -500,16 +761,23 @@ function initThree(){
         a.mesh.scale.setScalar(s);
         a.mesh.material.color.copy(a.baseCol).lerp(AFD_DARK,k*0.8);
         a.mesh.material.emissive.copy(a.baseCol).multiplyScalar(0.35+0.45*k);
+      }else{
+        // actors heat up inside the well's influence (emissive toward AfD cyan)
+        const heat=Math.min(1,D.g*kWell*1.6);
+        a.mesh.material.emissive.copy(a.baseEm).lerp(AFD_COL,heat*0.7);
       }
       a.mesh.position.set(X,Z+r*0.85,Y);
       a.label.position.set(X,Z+r*0.85+3.4,Y);
     }
     for(const it of ISSUES){
       displace(it.pos[0],it.pos[1]);
-      const X=it.pos[0]+D.x,Y=it.pos[1]+D.y,Z=D.z,r=it.niche?0.7:0.9;
+      const r=it.niche?0.7:(it.lowSal?0.55:0.9);
+      const X=it.pos[0]+D.x,Y=it.pos[1]+D.y,Z=D.z;
       it.mesh.position.set(X,Z+r,Y);
       it.label.position.set(X,Z+r+2.1,Y);
-      it.mesh.material.color.copy(it.baseCol).lerp(AFD_COL,it.mix);
+      // low-salience issues stay muted even if captured by the well
+      const mixEff=it.lowSal?it.mix*LOWSAL_MIX_CAP:it.mix;
+      it.mesh.material.color.copy(it.baseCol).lerp(AFD_COL,mixEff);
     }
     wellLight.intensity=w*0.35;
     wellLight.position.set(WELL.x,-w+3,WELL.y);
@@ -526,22 +794,47 @@ function initThree(){
       b.pts.material.opacity=Math.max(0,1-b.t/b.life);
       if(b.t>b.life){sc.remove(b.pts);b.pts.geometry.dispose();bursts.splice(i,1);}
     }
+    // shockwave rings
+    for(let i=shocks.length-1;i>=0;i--){
+      const s=shocks[i]; s.t+=simDt;
+      const k=s.t/s.life, sca=1+k*29;
+      s.mesh.scale.set(sca,sca,1);
+      s.mesh.material.opacity=Math.max(0,0.9*(1-k));
+      if(s.t>s.life){sc.remove(s.mesh);s.mesh.geometry.dispose();s.mesh.material.dispose();shocks.splice(i,1);}
+    }
     flashI=Math.max(0,flashI-simDt*14);
     const bp=breachPoint();
     flashLight.intensity=flashI;
     flashLight.position.set(bp.x,2,bp.y);
-    gl.render(sc,cam);
+    // bloom spike recovery (real time so it settles even during slow-mo)
+    if(bloom) bloom.strength+=(0.85-bloom.strength)*Math.min(1,rawDt*2.5);
+    if(composer) composer.render(); else gl.render(sc,cam);
   }
   return {
     render,
-    onBreach(silent){ buildRails(true); buildCracks(); if(!silent) spawnBurst(); },
-    onReset(){ buildRails(false); removeCracks();
-      bursts.forEach(b=>{sc.remove(b.pts);b.pts.geometry.dispose();}); bursts.length=0; flashI=0; },
-    resize(){ cam.aspect=innerWidth/innerHeight; cam.updateProjectionMatrix(); gl.setSize(innerWidth,innerHeight); }
+    onBreach(silent){
+      buildRails(true); buildCracks();
+      if(!silent){ spawnBurst(); spawnShock(); if(bloom) bloom.strength=2.2; }
+    },
+    onReset(){
+      buildRails(false); removeCracks(); clearShocks();
+      bursts.forEach(b=>{sc.remove(b.pts);b.pts.geometry.dispose();}); bursts.length=0;
+      flashI=0; postBreach=0; railMat.color.copy(railGold);
+      if(bloom) bloom.strength=0.85;
+      for(let i=0;i<INFLOW_N;i++) inRespawn(i);
+    },
+    resize(){
+      cam.aspect=innerWidth/innerHeight; cam.updateProjectionMatrix();
+      gl.setSize(innerWidth,innerHeight);
+      if(composer){ composer.setSize(innerWidth,innerHeight); setFxaaRes(); }
+    }
   };
 }
 
 /* ==================== 2.5D CANVAS FALLBACK ==================== */
+/* Cheap equivalents mirrored here: shake, well halo, shockwave circle,
+   rail warning color, camera drift. Bloom, grid vertex heat, and inflow
+   particles are 3D-only and skipped gracefully. */
 function initCanvas2D(){
   const cv=document.createElement('canvas');
   document.getElementById('stage').appendChild(cv);
@@ -550,13 +843,16 @@ function initCanvas2D(){
   function resize(){ cv.width=innerWidth*dpr; cv.height=innerHeight*dpr;
     cv.style.width=innerWidth+'px'; cv.style.height=innerHeight+'px'; }
   resize();
-  let camR=85, flash=0;
+  let camR=85, flash=0, shock2=-1, postBreach2=0;
   let C={x:0,y:0,z:0}, R={x:1,y:0,z:0}, U={x:0,y:1,z:0}, F={x:0,y:0,z:1};
   function setCam(simDt){
     camR+=(((sceneIdx===4)?120:85)-camR)*Math.min(1,simDt*1.2);
     const ang=camAngle();
     C={x:Math.sin(ang)*camR,y:camR*0.66,z:Math.cos(ang)*camR};
-    let f={x:-C.x,y:-4-C.y,z:-C.z}, fl=Math.hypot(f.x,f.y,f.z);
+    // camera drift toward the well as radicalization deepens (mirrors 3D lookAt)
+    const k=w/W_MAX;
+    const tx=WELL.x*0.15*k, ty=-4-w*0.15, tz=WELL.y*0.15*k;
+    let f={x:tx-C.x,y:ty-C.y,z:tz-C.z}, fl=Math.hypot(f.x,f.y,f.z);
     F={x:f.x/fl,y:f.y/fl,z:f.z/fl};
     let r={x:F.z,y:0,z:-F.x}, rl=Math.hypot(r.x,r.y,r.z);
     R={x:r.x/rl,y:0,z:r.z/rl};
@@ -581,9 +877,13 @@ function initCanvas2D(){
     ctx.stroke();
   }
   function deform(x,y){ displace(x,y); return [x+D.x,y+D.y,D.z]; }
-  function render(simDt){
-    setCam(simDt);
+  function render(simDt,rawDt){
+    rawDt=rawDt===undefined?simDt:rawDt;
+    setCam(rawDt);
+    ctx.setTransform(1,0,0,1,0,0);
     ctx.fillStyle='#0a0e18'; ctx.fillRect(0,0,cv.width,cv.height);
+    // breach shake: translate the whole frame (decay lives in tick)
+    if(shake>0) ctx.translate((Math.random()-.5)*shake*24*dpr,(Math.random()-.5)*shake*14*dpr);
     // grid
     for(let x=-PLANE.hx;x<=PLANE.hx;x+=5){
       const pts=[]; for(let y=-PLANE.hy;y<=PLANE.hy;y+=3) pts.push(deform(x,y));
@@ -593,7 +893,24 @@ function initCanvas2D(){
       const pts=[]; for(let x=-PLANE.hx;x<=PLANE.hx;x+=3) pts.push(deform(x,y));
       poly(pts,'rgba(90,120,170,0.5)',1*dpr);
     }
-    // guardrails
+    // well halo (cheap 2D equivalent of the 3D glow sprite)
+    const kWell=w/W_MAX;
+    if(kWell>0.02){
+      const hd=deform(WELL.x,WELL.y), hp=proj(hd[0],hd[1],hd[2]+2);
+      if(hp){
+        const hr=(16+w*1.8)*0.5*hp[3];
+        const hg=ctx.createRadialGradient(hp[0],hp[1],0,hp[0],hp[1],hr);
+        const ha=Math.min(1,kWell*1.1)*(0.85+0.15*Math.sin(simTime*2.1));
+        hg.addColorStop(0,'rgba(140,220,255,'+(0.55*ha)+')');
+        hg.addColorStop(0.4,'rgba(80,180,255,'+(0.2*ha)+')');
+        hg.addColorStop(1,'rgba(80,180,255,0)');
+        ctx.fillStyle=hg; ctx.beginPath(); ctx.arc(hp[0],hp[1],hr,0,Math.PI*2); ctx.fill();
+      }
+    }
+    // guardrails (with warning color, gated off after breach)
+    if(breached) postBreach2=Math.min(1,postBreach2+rawDt*0.6);
+    const warn=clamp01((w-(W_BREAK-3.5))/3.5)*(1-postBreach2);
+    const railCol=lerpHex(0xffd98a,0xff4a3c,warn*(0.5+0.5*Math.sin(simTime*7)));
     const bp=breachPoint();
     const railSegs=[];
     railSegs.push([[-PLANE.hx,PLANE.hy],[PLANE.hx,PLANE.hy]]);
@@ -607,7 +924,7 @@ function initCanvas2D(){
       const [a,b]=seg, len=Math.hypot(b[0]-a[0],b[1]-a[1]), n=Math.max(2,Math.round(len/2)), pts=[];
       for(let i=0;i<=n;i++) pts.push(deform(a[0]+(b[0]-a[0])*i/n, a[1]+(b[1]-a[1])*i/n));
       poly(pts,'rgba(255,217,138,0.25)',8*dpr);
-      poly(pts,'#ffd98a',3*dpr);
+      poly(pts,railCol,3*dpr);
     }
     // cracks
     if(crackPaths) for(const path of crackPaths)
@@ -617,8 +934,12 @@ function initCanvas2D(){
     for(const it of ISSUES){
       const d=deform(it.pos[0],it.pos[1]), s=proj(d[0],d[1],d[2]+1);
       if(!s) continue;
-      balls.push({s,r:(it.niche?0.7:0.9)*s[3],color:lerpHex(it.niche?NICHE_HEX:GREY_HEX,AFD_HEX,it.mix),
-        label:it.name,lc:'#b9c2cf',fs:10});
+      const baseHex=it.niche?NICHE_HEX:(it.lowSal?LOWSAL_HEX:GREY_HEX);
+      const mixEff=it.lowSal?it.mix*LOWSAL_MIX_CAP:it.mix;
+      const rMul=it.niche?0.7:(it.lowSal?0.55:0.9);
+      balls.push({s,r:rMul*s[3],color:lerpHex(baseHex,AFD_HEX,mixEff),
+        label:it.name,lc:it.niche?'#cfd6df':(it.lowSal?LOWSAL_LABEL_CSS:'#b9c2cf'),
+        fs:it.lowSal?8:10, alpha:it.lowSal?LOWSAL_OPACITY:1});
     }
     for(const a of ACTORS){
       const k=a.well?w/W_MAX:0, rw=a.well?2*(1+1.4*k):2;
@@ -627,10 +948,11 @@ function initCanvas2D(){
       balls.push({s,r:rw*s[3],
         color:a.well?lerpHex(AFD_HEX,AFD_DARK_HEX,k*0.8):css(a.color),
         stroke:a.outline?'#dfe6f0':null,label:a.name,
-        lc:a.name==='CDU'?'#fff':css(a.color),fs:13,bold:true});
+        lc:a.name==='CDU'?'#fff':css(a.color),fs:13,bold:true,alpha:1});
     }
     balls.sort((p,q)=>q.s[2]-p.s[2]);
     for(const b of balls){
+      ctx.globalAlpha=b.alpha;
       ctx.beginPath(); ctx.arc(b.s[0],b.s[1],Math.max(1.5,b.r),0,Math.PI*2);
       ctx.fillStyle=b.color; ctx.fill();
       if(b.stroke){ctx.lineWidth=2*dpr;ctx.strokeStyle=b.stroke;ctx.stroke();}
@@ -638,6 +960,7 @@ function initCanvas2D(){
       ctx.textAlign='center'; ctx.lineWidth=3*dpr; ctx.strokeStyle='rgba(5,8,15,0.85)';
       ctx.strokeText(b.label,b.s[0],b.s[1]-b.r-5*dpr);
       ctx.fillStyle=b.lc; ctx.fillText(b.label,b.s[0],b.s[1]-b.r-5*dpr);
+      ctx.globalAlpha=1;
     }
     // breach flash
     if(flash>0){
@@ -651,11 +974,26 @@ function initCanvas2D(){
       }
       flash-=simDt*0.9;
     }
+    // expanding shockwave circle
+    if(shock2>=0){
+      shock2+=simDt;
+      if(shock2>0.9) shock2=-1;
+      else{
+        const d=deform(bp.x,bp.y), s=proj(d[0],d[1],d[2]+1);
+        if(s){
+          const k=shock2/0.9, rad=(1+k*29)*s[3];
+          ctx.beginPath(); ctx.arc(s[0],s[1],rad,0,Math.PI*2);
+          ctx.strokeStyle='rgba(255,226,168,'+(0.9*(1-k))+')';
+          ctx.lineWidth=2.5*dpr; ctx.stroke();
+        }
+      }
+    }
+    ctx.setTransform(1,0,0,1,0,0);
   }
   return {
     render,
-    onBreach(silent){ flash=silent?0:1.2; },
-    onReset(){ flash=0; },
+    onBreach(silent){ flash=silent?0:1.2; shock2=silent?-1:0; },
+    onReset(){ flash=0; shock2=-1; postBreach2=0; },
     resize
   };
 }
@@ -683,10 +1021,15 @@ if(renderer){
   function tick(now){
     requestAnimationFrame(tick);
     const dt=Math.min(0.05,(now-last)/1000); last=now;
-    const simDt=playing?dt:0;
-    if(playing) update(dt);
+    /* Breach beat clocks: timeScale recovers and shake decays in REAL time;
+       BOTH the simulation and the render-side effects (bursts, flash,
+       shockwave) run on the SCALED clock so slow motion is consistent. */
+    timeScale+=(1-timeScale)*Math.min(1,dt*SLOWMO_RECOVER);
+    shake=Math.max(0,shake-dt*SHAKE_DECAY);
+    const simDt=playing?dt*timeScale:0;
+    if(playing) update(dt*timeScale);
     progressFill.style.width=Math.min(100,sceneT/SCENE_DUR[sceneIdx]*100)+'%';
-    renderer.render(simDt);
+    renderer.render(simDt,dt);
   }
   requestAnimationFrame(tick);
 }
