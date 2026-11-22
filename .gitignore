@@ -188,3 +188,11 @@ docs/
 
 # translation temp files
 po/*~
+
+
+
+# Ignore macOS system files
+
+.DS_Store
+
+._*
